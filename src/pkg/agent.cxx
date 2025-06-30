@@ -6,6 +6,7 @@
 #include "../../include/drivers/repl_driver.hpp"
 #include "../drivers/repl_driver.cxx"
 
+using namespace seal;
 /*
 Syntax to use logger:
   CUSTOM_LOG(lg, debug) << "your message"
@@ -110,6 +111,43 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
+
+  EncryptionParameters parms(scheme_type::bfv);
+
+  parms.set_poly_modulus_degree(POLY_MODULUS_DEGREE);
+  parms.set_coeff_modulus(CoeffModulus::BFVDefault(POLY_MODULUS_DEGREE));
+  parms.set_plain_modulus((PLAINTEXT_MODULUS));
+
+  SEALContext context(parms);
+
+  KeyGenerator keygen(context);
+  SecretKey secretKey = keygen.secret_key();
+
+  seal::PublicKey publicKey;
+  keygen.create_public_key(publicKey);
+
+  seal::Encryptor encryptor(context, publicKey);
+  seal::Decryptor decryptor(context, secretKey);
+
+  std::vector<int> coordinates = this->hypercube_driver->to_coords((query));
+  std::vector<int> indices(this->dimension*this->sidelength,0);
+
+  std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
+  for (int i = 0; i < indices.size();i++) {
+    if (i%this->sidelength == coordinates[i/this->sidelength]) {
+      indices[i] = 1;
+    }
+    seal::Plaintext plain(indices[i]);
+    encryptor.encrypt(plain,ciphertexts[i]);
+  }
+
+  std::vector<unsigned char> to_serialize = ciphertext_to_chvec(ciphertexts[0]);
+
+
+
+
+
+
 
 
   // TODO: implement me!

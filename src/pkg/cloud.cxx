@@ -15,6 +15,7 @@ See logger.hpp for more modes besides 'debug'
 namespace {
 src::severity_logger<logging::trivial::severity_level> lg;
 }
+using namespace seal;
 
 /**
  * Constructor
@@ -135,6 +136,15 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(network_driver, crypto_driver);
+
+  EncryptionParameters parms(scheme_type::bfv);
+
+  parms.set_poly_modulus_degree(POLY_MODULUS_DEGREE);
+  parms.set_coeff_modulus(CoeffModulus::BFVDefault(POLY_MODULUS_DEGREE));
+  parms.set_plain_modulus((PLAINTEXT_MODULUS));
+
+  SEALContext context(parms);
+
 
   // TODO: implement me!
 }
