@@ -156,6 +156,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   std::vector<seal::Ciphertext> query = query_message.query;
   //std::cout << " Received the selection vector" << std::endl;
 
+  /**
   std::vector<seal::Ciphertext> newCube;
   //std::cout << "Original Cube: [";
   for (int i = 0; i < pow(sidelength,dimension); i++) {
@@ -168,9 +169,31 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   }
   //std::cout << "]" << std::endl;
 
-  for (int i = 0; i < pow(sidelength,dimension); i++) {
-    evaluator.multiply_inplace(newCube[i],query[sidelength+i%sidelength]);
-    evaluator.relinearize_inplace(newCube[i],relinKeys);
+  if (dimension > 1) {
+    for (int j = 1; j < dimension; j++) {
+      for (int i = 0; i < pow(sidelength,dimension); i++) {
+        evaluator.multiply_inplace(newCube[i],query[sidelength*j+i%sidelength]);
+        evaluator.relinearize_inplace(newCube[i],relinKeys);
+      }
+    }
+  }**/
+
+  std::vector<seal::Ciphertext> newCube;
+  for (int i = 0; i < dimension; i++) {
+    for (int j = 0; j < pow(sidelength,dimension); j++) {
+      std::vector<int> coords = hypercube_driver->to_coords(j);
+      if (i == 0) {
+        seal::Plaintext plaintext(std::to_string(hypercube_driver->get(j).ConvertToLong()));
+        seal::Ciphertext result;
+        evaluator.multiply_plain(query[coords[i]],plaintext,result);
+        newCube.push_back(result);
+      }
+      else {
+        evaluator.multiply_inplace(newCube[j],query[sidelength*i+coords[i]]);
+        evaluator.relinearize_inplace(newCube[j],relinKeys);
+      }
+
+    }
   }
 
   seal::Ciphertext query_result;
