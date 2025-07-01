@@ -144,7 +144,40 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   parms.set_plain_modulus((PLAINTEXT_MODULUS));
 
   SEALContext context(parms);
+  seal::Evaluator evaluator(context);
 
+  std::vector<unsigned char> wrapped_query = network_driver->read();
+  std::pair<std::vector<unsigned char>, bool> unwrapped_query = crypto_driver->decrypt_and_verify(keys.first,keys.second,wrapped_query);
+  UserToServer_Query_Message query_message;
+  query_message.deserialize(unwrapped_query.first,context);
+  seal::RelinKeys relinKeys = query_message.rks;
+  std::vector<seal::Ciphertext> query = query_message.query;
+
+  std::vector<seal::Ciphertext> newCube;
+  for (int i = 0; i < pow(sidelength,dimension); i++) {
+    CryptoPP::Integer element = hypercube_driver->get(i);
+    seal::Plaintext plaintext(byteblock_to_string(integer_to_byteblock(element)));
+    seal::Ciphertext result;
+    evaluator.multiply_plain(query[i%sidelength],plaintext,result);
+    newCube.push_back(result);
+  }
+
+  for (int i = 0; i < pow(sidelength,dimension); i++) {
+    evaluator.multiply_inplace(newCube[i],query[sidelength+i%sidelength]);
+    evaluator.relinearize_inplace(newCube[i],relinKeys);
+  }
+
+  seal::Ciphertext query_result;
+  for (int i = 0; i < pow(sidelength,dimension); i++) {
+    if (i==0) query_result = newCube[i];
+    else evaluator.add_inplace(query_result,newCube[i]);
+  }
+
+  ServerToUser_Response_Message message;
+  message.response = query_result;
+
+  std::vector<unsigned char> final_result = crypto_driver->encrypt_and_tag(keys.first,keys.second,*message);
+  network_driver->send(final_result);
 
   // TODO: implement me!
 }
