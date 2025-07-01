@@ -125,9 +125,12 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::PublicKey publicKey;
   keygen.create_public_key(publicKey);
+  seal::RelinKeys relinKeys;
+  keygen.create_relin_keys(relinKeys);
 
   seal::Encryptor encryptor(context, publicKey);
   seal::Decryptor decryptor(context, secretKey);
+
 
   std::vector<int> coordinates = this->hypercube_driver->to_coords((query));
   std::vector<int> indices(this->dimension*this->sidelength,0);
@@ -137,18 +140,26 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
     if (i%this->sidelength == coordinates[i/this->sidelength]) {
       indices[i] = 1;
     }
-    seal::Plaintext plain(indices[i]);
+    seal::Plaintext plain(std::to_string(indices[i]));
     encryptor.encrypt(plain,ciphertexts[i]);
   }
 
-  std::vector<unsigned char> to_serialize = ciphertext_to_chvec(ciphertexts[0]);
+  UserToServer_Query_Message message;
+  message.rks = relinKeys;
+  message.query = ciphertexts;
 
+  std::vector<unsigned char> final_query = crypto_driver->encrypt_and_tag(keys.first,keys.second,*message);
+  network_driver->send(final_query);
 
+  std::vector<unsigned char> query_response = network_driver->read();
+  std::pair<std::vector<unsigned char>, bool> unwrapped_response = crypto_driver->decrypt_and_verify(keys.first,keys.second,query_response);
+  ServerToUser_Response_Message response_message;
+  response_message.deserialize(unwrapped_response.first,context);
+  seal::Ciphertext response = response_message.response;
 
-
-
-
-
+  seal::Plaintext plaintext;
+  decryptor.decrypt(response,plaintext);
+  return byteblock_to_integer(string_to_byteblock(plaintext.to_string()));
 
   // TODO: implement me!
 }
