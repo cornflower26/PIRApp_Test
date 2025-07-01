@@ -111,6 +111,7 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
+  //std::cout << "Connected and handled key exchange" << std::endl;
 
   EncryptionParameters parms(scheme_type::bfv);
 
@@ -130,26 +131,31 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Encryptor encryptor(context, publicKey);
   seal::Decryptor decryptor(context, secretKey);
-
+  //std::cout << "Generated parameters, context, and keys" << std::endl;
 
   std::vector<int> coordinates = this->hypercube_driver->to_coords((query));
   std::vector<int> indices(this->dimension*this->sidelength,0);
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
+  //std::cout << "Indices [";
   for (int i = 0; i < indices.size();i++) {
     if (i%this->sidelength == coordinates[i/this->sidelength]) {
       indices[i] = 1;
     }
+    //std::cout << " " << indices[i] << ", ";
     seal::Plaintext plain(std::to_string(indices[i]));
     encryptor.encrypt(plain,ciphertexts[i]);
   }
+  //std::cout << "]" << std::endl;
+  //std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
 
-  UserToServer_Query_Message message;
-  message.rks = relinKeys;
-  message.query = ciphertexts;
+  UserToServer_Query_Message *message = new UserToServer_Query_Message();
+  message->rks = relinKeys;
+  message->query = ciphertexts;
 
-  std::vector<unsigned char> final_query = crypto_driver->encrypt_and_tag(keys.first,keys.second,*message);
+  std::vector<unsigned char> final_query = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_query);
+  //std::cout << "Sent the selection vector to the server" << std::endl;
 
   std::vector<unsigned char> query_response = network_driver->read();
   std::pair<std::vector<unsigned char>, bool> unwrapped_response = crypto_driver->decrypt_and_verify(keys.first,keys.second,query_response);
@@ -159,7 +165,8 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Plaintext plaintext;
   decryptor.decrypt(response,plaintext);
-  return byteblock_to_integer(string_to_byteblock(plaintext.to_string()));
+  std::cout << "Decoded the response " << plaintext.to_string() << std::endl;
+  return plaintext.capacity();
 
   // TODO: implement me!
 }

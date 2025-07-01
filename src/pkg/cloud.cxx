@@ -136,6 +136,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(network_driver, crypto_driver);
+  //std::cout << "Key exchange completed" << std::endl;
 
   EncryptionParameters parms(scheme_type::bfv);
 
@@ -145,6 +146,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
 
   SEALContext context(parms);
   seal::Evaluator evaluator(context);
+  //std::cout << "Generated parameters and context " << std::endl;
 
   std::vector<unsigned char> wrapped_query = network_driver->read();
   std::pair<std::vector<unsigned char>, bool> unwrapped_query = crypto_driver->decrypt_and_verify(keys.first,keys.second,wrapped_query);
@@ -152,15 +154,19 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   query_message.deserialize(unwrapped_query.first,context);
   seal::RelinKeys relinKeys = query_message.rks;
   std::vector<seal::Ciphertext> query = query_message.query;
+  //std::cout << " Received the selection vector" << std::endl;
 
   std::vector<seal::Ciphertext> newCube;
+  //std::cout << "Original Cube: [";
   for (int i = 0; i < pow(sidelength,dimension); i++) {
     CryptoPP::Integer element = hypercube_driver->get(i);
-    seal::Plaintext plaintext(byteblock_to_string(integer_to_byteblock(element)));
+    //std::cout << " " << std::to_string(element.ConvertToLong()) << ",";
+    seal::Plaintext plaintext(std::to_string(element.ConvertToLong()));
     seal::Ciphertext result;
-    evaluator.multiply_plain(query[i%sidelength],plaintext,result);
+    evaluator.multiply_plain(query[i/sidelength],plaintext,result);
     newCube.push_back(result);
   }
+  //std::cout << "]" << std::endl;
 
   for (int i = 0; i < pow(sidelength,dimension); i++) {
     evaluator.multiply_inplace(newCube[i],query[sidelength+i%sidelength]);
@@ -173,11 +179,12 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
     else evaluator.add_inplace(query_result,newCube[i]);
   }
 
-  ServerToUser_Response_Message message;
-  message.response = query_result;
+  ServerToUser_Response_Message *message = new ServerToUser_Response_Message();
+  message->response = query_result;
 
-  std::vector<unsigned char> final_result = crypto_driver->encrypt_and_tag(keys.first,keys.second,*message);
+  std::vector<unsigned char> final_result = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_result);
+  //std::cout << "Evaluated and returned a response using homomorphic operations" << std::endl;
 
   // TODO: implement me!
 }
