@@ -166,7 +166,7 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
   seal::Plaintext plaintext;
   decryptor.decrypt(response,plaintext);
   std::cout << "Decoded the response " << plaintext.to_string() << std::endl;
-  return plaintext.capacity();
+  return byteblock_to_integer(string_to_byteblock(plaintext.to_string()));
 
   // TODO: implement me!
 }
