@@ -28,6 +28,8 @@ public:
   CryptoPP::Integer DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
                                std::shared_ptr<CryptoDriver> crypto_driver,
                                int key);
+  void DoBatchRetrieve(std::shared_ptr<NetworkDriver> network_driver,
+                        std::shared_ptr<CryptoDriver> crypto_driver,std::vector<int> query);
 
 private:
   std::string address;

@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -52,3 +53,6 @@ seal::Ciphertext chvec_to_ciphertext(seal::SEALContext ctx,
 std::vector<unsigned char> relinkeys_to_chvec(seal::RelinKeys rk);
 seal::RelinKeys chvec_to_relinkeys(seal::SEALContext ctx,
                                    std::vector<unsigned char> data);
+
+//Other
+std::vector<int> read_csv_values(const std::string &filename);

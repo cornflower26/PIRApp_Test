@@ -22,6 +22,7 @@ public:
   void run(int port);
   void HandleInsert(std::string input);
   void HandleGet(std::string input);
+    void HandleCube(std::string input);
 
   std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
   HandleKeyExchange(std::shared_ptr<NetworkDriver> network_driver,

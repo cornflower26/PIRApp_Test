@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.28.0)
 project(PIRApp VERSION 1.0)
 set(CLOUD_EXEC_NAME pir_cloud)
 set(AGENT_EXEC_NAME pir_agent)
+set(AGENT_SINGLE_EXEC_NAME pir_agent_single)
 set(LIBRARY_NAME pir_app_lib)
 set(LIBRARY_NAME_SHARED pir_app_lib_shared)
 set(LIBRARY_NAME_TA pir_app_lib_ta)
@@ -86,11 +87,16 @@ else()
   target_link_libraries(${AGENT_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 endif()
 
+add_executable(${AGENT_SINGLE_EXEC_NAME} src/cmd/agent_single.cxx)
+target_link_libraries(${AGENT_SINGLE_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
+
+
 # properties
 set_target_properties(
   ${LIBRARY_NAME}
   ${CLOUD_EXEC_NAME}
   ${AGENT_EXEC_NAME}
+  ${AGENT_SINGLE_EXEC_NAME}
     PROPERTIES
       CXX_STANDARD 20
       CXX_STANDARD_REQUIRED YES

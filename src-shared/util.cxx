@@ -153,3 +153,32 @@ seal::RelinKeys chvec_to_relinkeys(seal::SEALContext ctx,
   rk.load(ctx, str);
   return rk;
 }
+
+/**
+ * Read CSV file
+ * @param filename
+ * @return
+ */
+std::vector<int> read_csv_values(const std::string &filename) {
+  std::vector<int> values;
+  std::ifstream file(filename);
+
+  if (!file.is_open()) {
+    std::cerr << "Error: Unable to open file: " << filename << "\n";
+    return values; // Return an empty vector if the file cannot be opened
+  }
+
+  std::string line;
+  // Read the file line by line
+  while (std::getline(file, line)) {
+    std::stringstream ss(line);
+    std::string value;
+    // Split the line by comma
+    while (std::getline(ss, value, ',')) {
+      //std::cout << stoi(value) << " ";
+      values.push_back(stoi(value));
+    }
+  }
+
+  return values;
+}

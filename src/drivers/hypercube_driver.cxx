@@ -44,7 +44,7 @@ CryptoPP::Integer HypercubeDriver::get(int idx) {
  * Convert index to coordinates
  */
 std::vector<int> HypercubeDriver::to_coords(int idx) {
-  if (idx > std::pow(this->s, this->d))
+  if (idx > std::pow(this->s, this->d)-1)
     throw std::runtime_error("Hypercube out of bounds");
 
   std::vector<int> res;

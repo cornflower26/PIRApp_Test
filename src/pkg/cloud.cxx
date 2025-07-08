@@ -42,6 +42,7 @@ void CloudClient::run(int port) {
   REPLDriver<CloudClient> repl = REPLDriver<CloudClient>(this);
   repl.add_action("insert", "insert <key> <value>", &CloudClient::HandleInsert);
   repl.add_action("get", "get <key>", &CloudClient::HandleGet);
+  repl.add_action("cube", "cube <filename>", &CloudClient::HandleCube);
   repl.run();
 }
 
@@ -72,6 +73,24 @@ void CloudClient::HandleGet(std::string input) {
   int key = std::stoi(input_split[1]);
   CryptoPP::Integer value = this->hypercube_driver->get(key);
   this->cli_driver->print_success("Get value: " + CryptoPP::IntToString(value));
+}
+
+/**
+ * Get a file and put all values in the cube
+ */
+void CloudClient::HandleCube(std::string input) {
+  std::vector<std::string> input_split = string_split(input, ' ');
+  if (input_split.size() != 2) {
+    this->cli_driver->print_left("invalid number of arguments.");
+    return;
+  }
+  std::vector<int> values = read_csv_values(input_split[1]);
+  for (int i = 0; i < values.size(); i++) {
+    CryptoPP::Integer value = CryptoPP::Integer(values[i]);
+    //std::cout << value << " ";
+    this->hypercube_driver->insert(i, value);
+  }
+  this->cli_driver->print_success("Preset Hypercube!");
 }
 
 /**
@@ -208,6 +227,6 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   std::vector<unsigned char> final_result = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_result);
   //std::cout << "Evaluated and returned a response using homomorphic operations" << std::endl;
-
-  // TODO: implement me!
 }
+
+
