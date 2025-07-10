@@ -5,6 +5,7 @@ project(PIRApp VERSION 1.0)
 set(CLOUD_EXEC_NAME pir_cloud)
 set(AGENT_EXEC_NAME pir_agent)
 set(AGENT_SINGLE_EXEC_NAME pir_agent_single)
+set(BENCHMARK_EXEC_NAME pir_benchmark)
 set(LIBRARY_NAME pir_app_lib)
 set(LIBRARY_NAME_SHARED pir_app_lib_shared)
 set(LIBRARY_NAME_TA pir_app_lib_ta)
@@ -47,48 +48,28 @@ set(SOURCES
   src/drivers/crypto_driver.cxx
   src/drivers/network_driver.cxx
   src/drivers/repl_driver.cxx
-  src/drivers/hypercube_driver.cxx)
+  src/drivers/hypercube_driver.cxx
+  src/pkg/benchmark.cxx)
 add_library(${LIBRARY_NAME} ${SOURCES})
 target_include_directories(${LIBRARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include-shared ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(${LIBRARY_NAME} PUBLIC "/usr/local/include/SEAL-4.1")
 target_link_libraries(${LIBRARY_NAME} PRIVATE ${LIBRARY_NAME_SHARED})
 
-# add ta libraries
-if ( "$ENV{CS1515_TA_MODE}" STREQUAL "on" )
-  set(SOURCES_TA
-    src-ta/pkg/cloud.cxx
-    src-ta/pkg/agent.cxx
-    src-ta/drivers/cli_driver.cxx
-    src-ta/drivers/crypto_driver.cxx
-    src-ta/drivers/network_driver.cxx
-    src-ta/drivers/repl_driver.cxx
-    src-ta/drivers/hypercube_driver.cxx)
-  add_library(${LIBRARY_NAME_TA} ${SOURCES_TA})
-  target_include_directories(${LIBRARY_NAME_TA} PUBLIC ${PROJECT_SOURCE_DIR}/include-shared ${PROJECT_SOURCE_DIR}/include-ta)
-  target_include_directories(${LIBRARY_NAME_TA} PUBLIC "/usr/local/include/SEAL-4.1")
-  target_link_libraries(${LIBRARY_NAME_TA} PRIVATE ${LIBRARY_NAME_SHARED})
-endif()
 
 # add cloud executables
-if ( "$ENV{CS1515_TA_MODE}" STREQUAL "on" )
-  add_executable(${CLOUD_EXEC_NAME} src-ta/cmd/cloud.cxx)
-  target_link_libraries(${CLOUD_EXEC_NAME} PRIVATE ${LIBRARY_NAME_TA})
-else()
-  add_executable(${CLOUD_EXEC_NAME} src/cmd/cloud.cxx)
-  target_link_libraries(${CLOUD_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
-endif()
+add_executable(${CLOUD_EXEC_NAME} src/cmd/cloud.cxx)
+target_link_libraries(${CLOUD_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
+
 
 # add agent executables
-if ( "$ENV{CS1515_TA_MODE}" STREQUAL "on" )
-  add_executable(${AGENT_EXEC_NAME} src-ta/cmd/agent.cxx)
-  target_link_libraries(${AGENT_EXEC_NAME} PRIVATE ${LIBRARY_NAME_TA})
-else()
-  add_executable(${AGENT_EXEC_NAME} src/cmd/agent.cxx)
-  target_link_libraries(${AGENT_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
-endif()
+add_executable(${AGENT_EXEC_NAME} src/cmd/agent.cxx)
+target_link_libraries(${AGENT_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 
 add_executable(${AGENT_SINGLE_EXEC_NAME} src/cmd/agent_single.cxx)
 target_link_libraries(${AGENT_SINGLE_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
+
+add_executable(${BENCHMARK_EXEC_NAME} src/cmd/benchmark.cxx)
+target_link_libraries(${BENCHMARK_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 
 
 # properties
@@ -97,6 +78,7 @@ set_target_properties(
   ${CLOUD_EXEC_NAME}
   ${AGENT_EXEC_NAME}
   ${AGENT_SINGLE_EXEC_NAME}
+  ${BENCHMARK_EXEC_NAME}
     PROPERTIES
       CXX_STANDARD 20
       CXX_STANDARD_REQUIRED YES
