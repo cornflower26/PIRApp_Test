@@ -155,7 +155,9 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(network_driver, crypto_driver);
-  //std::cout << "Key exchange completed" << std::endl;
+  std::cout << "Key exchange completed" << std::endl;
+  std::cout << "AES_key " << byteblock_to_string(keys.first) << std::endl;
+  std::cout << "HMAC_key " << byteblock_to_string(keys.second) << std::endl;
 
   EncryptionParameters parms(scheme_type::bfv);
 
@@ -165,7 +167,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
 
   SEALContext context(parms);
   seal::Evaluator evaluator(context);
-  //std::cout << "Generated parameters and context " << std::endl;
+  std::cout << "Generated parameters and context " << std::endl;
 
   std::vector<unsigned char> wrapped_query = network_driver->read();
   std::pair<std::vector<unsigned char>, bool> unwrapped_query = crypto_driver->decrypt_and_verify(keys.first,keys.second,wrapped_query);
@@ -173,7 +175,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   query_message.deserialize(unwrapped_query.first,context);
   seal::RelinKeys relinKeys = query_message.rks;
   std::vector<seal::Ciphertext> query = query_message.query;
-  //std::cout << " Received the selection vector" << std::endl;
+  std::cout << "Received the selection vector" << std::endl;
 
   /**
   std::vector<seal::Ciphertext> newCube;
@@ -214,19 +216,21 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
 
     }
   }
+  std::cout << "Multiplied selection vectors by the database hypercube " << std::endl;
 
   seal::Ciphertext query_result;
   for (int i = 0; i < pow(sidelength,dimension); i++) {
     if (i==0) query_result = newCube[i];
     else evaluator.add_inplace(query_result,newCube[i]);
   }
+  std::cout << "Added all resultant ciphertexts together " << std::endl;
 
   ServerToUser_Response_Message *message = new ServerToUser_Response_Message();
   message->response = query_result;
 
   std::vector<unsigned char> final_result = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_result);
-  //std::cout << "Evaluated and returned a response using homomorphic operations" << std::endl;
+  std::cout << "Evaluated and returned a response using homomorphic operations" << std::endl;
 }
 
 

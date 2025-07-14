@@ -15,7 +15,6 @@ See logger.hpp for more modes besides 'debug'
 namespace {
 src::severity_logger<logging::trivial::severity_level> lg;
 }
-
 /**
  * Constructor
  */
@@ -111,7 +110,9 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
-  //std::cout << "Connected and handled key exchange" << std::endl;
+  std::cout << "Connected and handled key exchange" << std::endl;
+  std::cout << "AES_key " << byteblock_to_string(keys.first) << std::endl;
+  std::cout << "HMAC_key " << byteblock_to_string(keys.second) << std::endl;
 
   EncryptionParameters parms(scheme_type::bfv);
 
@@ -131,23 +132,42 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Encryptor encryptor(context, publicKey);
   seal::Decryptor decryptor(context, secretKey);
-  //std::cout << "Generated parameters, context, and keys" << std::endl;
+  std::cout << "Generated parameters, context, and keys" << std::endl;
+  std::cout << "\t Polynomial Modulus Degree: " << POLY_MODULUS_DEGREE << std::endl;
+  std::cout << "\t Plaintext Modulus Degree: " << PLAINTEXT_MODULUS << std::endl;
+  //std::cout << chvec2str(params_to_chvec(parms)) << std::endl;
 
   std::vector<int> coordinates = this->hypercube_driver->to_coords((query));
   std::vector<int> indices(this->dimension*this->sidelength,0);
+  std::cout << "Generating coordinates from index: ";
+  std::cout << "( ";
+  for (int j = 0; j < coordinates.size();j++) {
+      std::cout << coordinates[j] << " ";
+  }
+  std::cout << ")";
+  std::cout << std::endl;
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
-  //std::cout << "Indices [";
+  std::cout << "Indices [";
   for (int i = 0; i < indices.size();i++) {
     if (i%this->sidelength == coordinates[i/this->sidelength]) {
       indices[i] = 1;
     }
-    //std::cout << " " << indices[i] << ", ";
+    std::cout << " " << indices[i] << ", ";
     seal::Plaintext plain(std::to_string(indices[i]));
     encryptor.encrypt(plain,ciphertexts[i]);
   }
-  //std::cout << "]" << std::endl;
-  //std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
+  std::cout << "]" << std::endl;
+
+  std::cout << "Ciphertexts: " << std::endl;
+  std::cout << "\t Size: " <<  ciphertexts[0].dyn_array().size() << std::endl;
+  for (int i = 0; i < ciphertexts.size();i++) {
+    auto data = ciphertexts[i].data();
+    std::cout << "\t Ciphertext " << i << " : [ " << data[0] << " ... " <<
+                    data[ciphertexts[i].dyn_array().size()-1] << " ]" << std::endl;
+    //std::cout << chvec2str(ciphertexts[i]) << ", ";
+  }
+  std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
 
   UserToServer_Query_Message *message = new UserToServer_Query_Message();
   message->rks = relinKeys;
@@ -155,7 +175,7 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   std::vector<unsigned char> final_query = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_query);
-  //std::cout << "Sent the selection vector to the server" << std::endl;
+  std::cout << "Sent the selection vector to the server" << std::endl;
 
   std::vector<unsigned char> query_response = network_driver->read();
   std::pair<std::vector<unsigned char>, bool> unwrapped_response = crypto_driver->decrypt_and_verify(keys.first,keys.second,query_response);
@@ -179,7 +199,9 @@ AgentClient::DoBatchRetrieve(std::shared_ptr<NetworkDriver> network_driver,
   // be encrypted and MAC tagged. Incoming messages should be decrypted and have
   // their MAC checked.
   auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
-  //std::cout << "Connected and handled key exchange" << std::endl;
+  std::cout << "Connected and handled key exchange" << std::endl;
+  std::cout << "AES_key " << byteblock_to_string(keys.first) << std::endl;
+  std::cout << "HMAC_key " << byteblock_to_string(keys.second) << std::endl;
 
   EncryptionParameters parms(scheme_type::bfv);
 
@@ -199,29 +221,49 @@ AgentClient::DoBatchRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Encryptor encryptor(context, publicKey);
   seal::Decryptor decryptor(context, secretKey);
-  //std::cout << "Generated parameters, context, and keys" << std::endl;
+  std::cout << "Generated parameters, context, and keys" << std::endl;
 
+  std::cout << " Generating coordinates from index: ";
   std::vector<std::vector<int>> coordinates;
   for (int i = 0; i < query.size();i++) {
     coordinates.push_back(this->hypercube_driver->to_coords((query[i])));
+    std::cout << "( ";
+    for (int j = 0; j < coordinates.size();j++) {
+      std::cout << coordinates[i][j];
+    }
+    std::cout << " )";
   }
+  std::cout << std::endl;
 
   std::vector<int> indices(this->dimension*this->sidelength,0);
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
-  //std::cout << "Indices [";
+  std::cout << "Indices [";
   for (int i = 0; i < indices.size();i++) {
     for (int j = 0; j < coordinates.size(); j++) {
       if (i%this->sidelength == coordinates[j][i/this->sidelength]) {
         indices[i] = 1;
       }
     }
-    //std::cout << " " << indices[i] << ", ";
+    std::cout << " " << indices[i] << ", ";
     seal::Plaintext plain(std::to_string(indices[i]));
     encryptor.encrypt(plain,ciphertexts[i]);
   }
-  //std::cout << "]" << std::endl;
-  //std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
+  std::cout << "]" << std::endl;
+  std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
+
+
+  std::cout << "Ciphertexts [";
+  for (int i = 0; i < ciphertexts.size();i++) {
+    std::cout << chvec2str(ciphertext_to_chvec(ciphertexts[i])) << ", ";
+    //std::vector<unsigned char> cipher = ciphertext_to_chvec(ciphertexts[i]);
+    //std::cout << " ";
+    //for (int j = 0; j < cipher.size(); j++) std::cout << cipher[i] << " ";
+    //std::cout <<" ,";
+  }
+  std::cout << "]" << std::endl;
+  std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
+
 
   UserToServer_Query_Message *message = new UserToServer_Query_Message();
   message->rks = relinKeys;
@@ -229,7 +271,7 @@ AgentClient::DoBatchRetrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   std::vector<unsigned char> final_query = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_query);
-  //std::cout << "Sent the selection vector to the server" << std::endl;
+  std::cout << "Sent the selection vector to the server" << std::endl;
 
   std::vector<unsigned char> query_response = network_driver->read();
   std::pair<std::vector<unsigned char>, bool> unwrapped_response = crypto_driver->decrypt_and_verify(keys.first,keys.second,query_response);
