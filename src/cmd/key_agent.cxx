@@ -35,11 +35,37 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
         b = (b/sidelength)+1;
         j = j % b;
         }
-    Retrieve(network_driver,crypto_driver,to_encode);
+    return Retrieve(network_driver,crypto_driver,to_encode);
 
 }
 
+/**
+ * run
+ */
+void KeyAgentClient::run() {
+    REPLDriver<KeyAgentClient> repl = REPLDriver<KeyAgentClient>(this);
+    repl.add_action("get", "get <key>", &AgentClient::HandleRetrieve);
+    repl.add_action("keyword", "keyword <key>", &KeyAgentClient::HandleKeyRetrieve);
+    repl.run();
+}
 
-void KeyAgentClient::Decrypt() {
 
+/**
+ * Privately retrieve a value from the cloud.
+ */
+void KeyAgentClient::HandleKeyRetrieve(std::string input) {
+    // Parse input.
+    std::vector<std::string> input_split = string_split(input, ' ');
+    if (input_split.size() != 2) {
+        this->cli_driver->print_left("invalid number of arguments.");
+        return;
+    }
+    std::string key = input_split[1];
+
+    // Call retrieve
+    std::shared_ptr<NetworkDriver> network_driver =
+        std::make_shared<NetworkDriverImpl>();
+    std::shared_ptr<CryptoDriver> crypto_driver =
+        std::make_shared<CryptoDriver>();
+    this->DoKeyRetrieve(network_driver, crypto_driver, key);
 }

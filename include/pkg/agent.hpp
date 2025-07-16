@@ -19,7 +19,7 @@
 class AgentClient {
 public:
   AgentClient(std::string address, int port, int d, int s);
-  void run();
+  virtual void run();
 
   std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
   HandleKeyExchange(std::shared_ptr<CryptoDriver> crypto_driver,

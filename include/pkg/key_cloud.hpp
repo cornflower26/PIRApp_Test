@@ -9,6 +9,9 @@ public:
     void Encode();
     void DatabaseSetup();
 
+    void run(int port) override;
+    void HandleKeyword(std::string input);
+
 private:
     int b;
     int epsilon;

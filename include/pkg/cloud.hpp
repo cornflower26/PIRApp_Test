@@ -19,7 +19,7 @@
 class CloudClient {
 public:
   CloudClient(int d, int s);
-  void run(int port);
+  virtual void run(int port);
   void HandleInsert(std::string input);
   void HandleGet(std::string input);
   void HandleCube(std::string input);

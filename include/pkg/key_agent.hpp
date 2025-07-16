@@ -7,7 +7,8 @@ class KeyAgentClient: public AgentClient{
     CryptoPP::Integer DoKeyRetrieve(std::shared_ptr<NetworkDriver> network_driver,
                              std::shared_ptr<CryptoDriver> crypto_driver,
                              std::string key);
-    void Decrypt();
+    void run() override;
+    void HandleKeyRetrieve(std::string input);
 
 private:
     int b;

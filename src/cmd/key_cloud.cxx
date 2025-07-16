@@ -44,7 +44,7 @@ void KeyCloudClient::Encode() {
         iterator++;
     }
     for (int i = 0; i < b; i++) {
-        std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions[i]);
+        std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions[i],b);
         for (int j = 0; j < e.size(); j++) {
             std::vector<int> coords{i,j};
             this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);
@@ -52,3 +52,36 @@ void KeyCloudClient::Encode() {
     }
 }
 
+/**
+ * run
+ */
+void KeyCloudClient::run(int port) {
+    // Start listener thread
+    std::thread listener_thread(&CloudClient::ListenForConnections, this, port);
+    listener_thread.detach();
+
+    // Run REPL.
+    REPLDriver<KeyCloudClient> repl = REPLDriver<KeyCloudClient>(this);
+    repl.add_action("insert", "insert <key> <value>", &CloudClient::HandleInsert);
+    repl.add_action("get", "get <key>", &CloudClient::HandleGet);
+    repl.add_action("cube", "cube <filename>", &CloudClient::HandleCube);
+    repl.add_action("keyword", "keyword", &KeyCloudClient::HandleKeyword);
+    repl.run();
+}
+
+/**
+ * Insert a value into the database
+ */
+void KeyCloudClient::HandleKeyword(std::string input) {
+    std::vector<std::string> input_split = string_split(input, ' ');
+    if (input_split.size() != 1) {
+        this->cli_driver->print_left("invalid number of arguments.");
+        return;
+    }
+    DatabaseSetup();
+    Encode();
+    //int key = std::stoi(input_split[1]);
+    //CryptoPP::Integer value = CryptoPP::Integer(std::stoi(input_split[2]));
+    //this->hypercube_driver->insert(key, value);
+    this->cli_driver->print_success("Converted to Keyword");
+}
