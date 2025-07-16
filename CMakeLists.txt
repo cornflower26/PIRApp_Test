@@ -49,7 +49,9 @@ set(SOURCES
   src/drivers/network_driver.cxx
   src/drivers/repl_driver.cxx
   src/drivers/hypercube_driver.cxx
-  src/pkg/benchmark.cxx)
+  src/pkg/benchmark.cxx
+        include/pkg/key_agent.hpp
+        include/pkg/key_cloud.hpp)
 add_library(${LIBRARY_NAME} ${SOURCES})
 target_include_directories(${LIBRARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include-shared ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(${LIBRARY_NAME} PUBLIC "/usr/local/include/SEAL-4.1")
@@ -62,7 +64,9 @@ target_link_libraries(${CLOUD_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 
 
 # add agent executables
-add_executable(${AGENT_EXEC_NAME} src/cmd/agent.cxx)
+add_executable(${AGENT_EXEC_NAME} src/cmd/agent.cxx
+        src/cmd/key_agent.cxx
+        src/cmd/key_cloud.cxx)
 target_link_libraries(${AGENT_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 
 add_executable(${AGENT_SINGLE_EXEC_NAME} src/cmd/agent_single.cxx)

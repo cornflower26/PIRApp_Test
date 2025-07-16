@@ -182,3 +182,72 @@ std::vector<int> read_csv_values(const std::string &filename) {
 
   return values;
 }
+
+int partition_hash(CryptoPP::SecByteBlock hashkey, std::string key, int b) {
+  CryptoPP::SipHash<4, 8, true> mac(hashkey.data(), hashkey.size());
+  CryptoPP::byte digest[mac.DigestSize()];
+  mac.CalculateDigest(digest,(const CryptoPP::byte*)&key[0], key.size());
+
+  CryptoPP::Integer hashval = CryptoPP::Integer(digest, sizeof(digest));
+  uint64_t range = static_cast<uint64_t>(b) - static_cast<uint64_t>(0) + 1;
+  int result = static_cast<int>(hashval % range);
+  return result;
+}
+
+bool hash_two(CryptoPP::SecByteBlock hashkey, std::string key) {
+  CryptoPP::SipHash<4, 8, true> mac(hashkey.data(), hashkey.size());
+  CryptoPP::byte digest[mac.DigestSize()];
+  mac.CalculateDigest(digest,(const CryptoPP::byte*)&key[0], key.size());
+
+  CryptoPP::Integer hashval = CryptoPP::Integer(digest, sizeof(digest));
+  uint64_t range = static_cast<uint64_t>(1) - static_cast<uint64_t>(0) + 1;
+  int result = static_cast<int>(hashval % range);
+  return result;
+}
+
+int rep(CryptoPP::SecByteBlock hashkey, std::string key, int value) {
+  CryptoPP::SipHash<4, 8, true> mac(hashkey.data(), hashkey.size());
+  CryptoPP::byte digest[mac.DigestSize()];
+  mac.CalculateDigest(digest,(const CryptoPP::byte*)&key[0], key.size());
+
+  CryptoPP::byte val = CryptoPP::byte(value);
+
+  CryptoPP::byte full_rep[mac.DigestSize()+1];
+  for (int i = 0; i < mac.DigestSize(); i++) {
+    full_rep[i] = digest[i];
+  }
+  full_rep[mac.DigestSize()] = val;
+
+  CryptoPP::Integer hashval = CryptoPP::Integer(full_rep, sizeof(digest));
+  return hashval.ConvertToLong();
+}
+
+
+std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d) {
+  std::vector<int> result(d,0);
+  for (int i = 0; i < d; i++) {
+    result[i] = hash_two(hash_key, key + std::to_string(i));
+  }
+  return result;
+}
+
+std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d) {
+  boost::numeric::ublas::matrix<int> M (partition.size(),d);
+  std::vector<int> reps;
+  for (int i = 0; i < partition.size(); i++) {
+    std::vector<int> rvector = RandVector(hash_key_2, partition[i].first,d);
+    for (int j = 0; j < d; j++) {
+      M(i,j) = rvector[j];
+    }
+    reps.push_back(rep(hash_key_2, partition[i].first,partition[i].second));
+  }
+  return LinearSolve(M, reps);
+}
+
+std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, std::vector<int> sol) {
+  std::vector<int> y;
+  boost::numeric::ublas::permutation_matrix<int> pm(A.size1());
+  boost::numeric::ublas::lu_factorize(A, pm);
+  boost::numeric::ublas::lu_substitute(A, pm, y);
+  return y;
+}

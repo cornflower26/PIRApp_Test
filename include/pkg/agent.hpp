@@ -30,8 +30,11 @@ public:
                                int key);
   void DoBatchRetrieve(std::shared_ptr<NetworkDriver> network_driver,
                         std::shared_ptr<CryptoDriver> crypto_driver,std::vector<int> query);
+    CryptoPP::Integer Retrieve(std::shared_ptr<NetworkDriver> network_driver,
+                             std::shared_ptr<CryptoDriver> crypto_driver,
+                             std::vector<std::vector<int>> query);
 
-private:
+protected:
   std::string address;
   int port;
 

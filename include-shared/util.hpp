@@ -9,6 +9,9 @@
 #include <vector>
 
 #include "seal/seal.h"
+#include "boost/numeric/ublas/matrix.hpp"
+#include "boost/numeric/ublas/matrix_expression.hpp"
+#include "boost/numeric/ublas/lu.hpp"
 
 #include <crypto++/cryptlib.h>
 #include <crypto++/filters.h>
@@ -16,6 +19,7 @@
 #include <crypto++/integer.h>
 #include <crypto++/misc.h>
 #include <crypto++/sha.h>
+#include <crypto++/siphash.h>
 
 // String <=> Vec<char>.
 std::string chvec2str(std::vector<unsigned char> data);
@@ -38,6 +42,11 @@ void print_string_as_hex(std::string str);
 void print_key_as_int(CryptoPP::SecByteBlock block);
 void print_key_as_hex(CryptoPP::SecByteBlock block);
 
+//HashFunctions
+int partition_hash(CryptoPP::SecByteBlock hashkey, std::string key, int b);
+bool hash_two(CryptoPP::SecByteBlock hashkey, std::string key);
+int rep(CryptoPP::SecByteBlock hashkey, std::string key, int value);
+
 // Splitter.
 std::vector<std::string> string_split(std::string str, char delimiter);
 
@@ -56,3 +65,6 @@ seal::RelinKeys chvec_to_relinkeys(seal::SEALContext ctx,
 
 //Other
 std::vector<int> read_csv_values(const std::string &filename);
+std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d);
+std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d);
+std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, std::vector<int> sol);
