@@ -10,6 +10,9 @@ public:
     void DatabaseSetup();
 
     void run(int port) override;
+    std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
+    HandleKeyExchange(std::shared_ptr<NetworkDriver> network_driver,
+                  std::shared_ptr<CryptoDriver> crypto_driver) override;
     void HandleKeyword(std::string input);
 
 private:

@@ -24,7 +24,7 @@ public:
   void HandleGet(std::string input);
   void HandleCube(std::string input);
 
-  std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
+  virtual std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
   HandleKeyExchange(std::shared_ptr<NetworkDriver> network_driver,
                     std::shared_ptr<CryptoDriver> crypto_driver);
   void HandleSend(std::shared_ptr<NetworkDriver> network_driver,

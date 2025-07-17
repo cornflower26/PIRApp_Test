@@ -142,6 +142,13 @@ SecByteBlock CryptoDriver::AES_generate_key(const SecByteBlock &DH_shared_key) {
   return AES_shared_key;
 }
 
+SecByteBlock CryptoDriver::SipHash_generate_key() {
+  AutoSeededRandomPool prng;
+  SecByteBlock key(AES::DEFAULT_KEYLENGTH);
+  prng.GenerateBlock(key, key.size());
+  return key;
+}
+
 /**
  * @brief Encrypts the given plaintext.
  */

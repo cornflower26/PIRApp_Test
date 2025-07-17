@@ -8,6 +8,9 @@ class KeyAgentClient: public AgentClient{
                              std::shared_ptr<CryptoDriver> crypto_driver,
                              std::string key);
     void run() override;
+    std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
+    HandleKeyExchange(std::shared_ptr<CryptoDriver> crypto_driver,
+                  std::shared_ptr<NetworkDriver> network_driver) override;
     void HandleKeyRetrieve(std::string input);
 
 private:

@@ -27,6 +27,7 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
                          std::string key) {
     std::vector<std::vector<int>> to_encode(dimension);
     to_encode[0] = RandVector(hash_key_2,key, dimension);
+    /**
     int j = partition_hash(hash_key_1,key,b);
     for (int i = 1; i < dimension;i++){
        int j_i =  j/((b/sidelength)+1);
@@ -35,8 +36,8 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
         b = (b/sidelength)+1;
         j = j % b;
         }
+        **/
     return Retrieve(network_driver,crypto_driver,to_encode);
-
 }
 
 /**
@@ -68,4 +69,52 @@ void KeyAgentClient::HandleKeyRetrieve(std::string input) {
     std::shared_ptr<CryptoDriver> crypto_driver =
         std::make_shared<CryptoDriver>();
     this->DoKeyRetrieve(network_driver, crypto_driver, key);
+}
+
+/**
+ * Come to a shared secret
+ */
+std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
+KeyAgentClient::HandleKeyExchange(std::shared_ptr<CryptoDriver> crypto_driver,
+                               std::shared_ptr<NetworkDriver> network_driver) {
+    // Generate private/public DH keys
+    auto dh_values = crypto_driver->DH_initialize();
+
+    // Respond with m = (g^b, g^a) signed with our private DSA key
+    DHPublicValue_Message public_value_s;
+    public_value_s.public_value = std::get<2>(dh_values);
+    std::vector<unsigned char> public_value_data;
+    public_value_s.serialize(public_value_data);
+    network_driver->send(public_value_data);
+
+    // Listen for g^a
+    std::vector<unsigned char> server_public_value = network_driver->read();
+    DHPublicValue_Message server_public_value_s;
+    server_public_value_s.deserialize(server_public_value);
+
+    // Recover g^ab
+    auto dh_shared_key = crypto_driver->DH_generate_shared_key(
+        std::get<0>(dh_values), std::get<1>(dh_values),
+        server_public_value_s.public_value);
+
+    // Generate keys
+    auto AES_key = crypto_driver->AES_generate_key(dh_shared_key);
+    auto HMAC_key = crypto_driver->HMAC_generate_key(dh_shared_key);
+    auto keys = std::make_pair(AES_key, HMAC_key);
+
+    std::vector<unsigned char> hash_key_1_m = network_driver->read();
+    DHPublicValue_Message hash_key_1_message;
+    hash_key_1_message.deserialize(hash_key_1_m);
+    hash_key_1 = hash_key_1_message.public_value;
+
+    std::vector<unsigned char> hash_key_2_m = network_driver->read();
+    DHPublicValue_Message hash_key_2_message;
+    hash_key_2_message.deserialize(hash_key_2_m);
+    hash_key_2 = hash_key_2_message.public_value;
+
+    std::vector<unsigned char> hash_key_r_m = network_driver->read();
+    DHPublicValue_Message hash_key_r_message;
+    hash_key_r_message.deserialize(hash_key_r_m);
+    hash_key_r = hash_key_r_message.public_value;
+    return keys;
 }
