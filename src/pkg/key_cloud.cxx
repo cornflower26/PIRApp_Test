@@ -62,7 +62,7 @@ void KeyCloudClient::Encode() {
  */
 void KeyCloudClient::run(int port) {
     // Start listener thread
-    std::thread listener_thread(&CloudClient::ListenForConnections, this, port);
+    std::thread listener_thread(&KeyCloudClient::ListenForConnections, this, port);
     listener_thread.detach();
 
     // Run REPL.

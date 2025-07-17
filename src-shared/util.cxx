@@ -245,9 +245,14 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::Sec
 }
 
 std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, std::vector<int> sol) {
-  std::vector<int> y;
+  boost::numeric::ublas::vector<int> y;
   boost::numeric::ublas::permutation_matrix<int> pm(A.size1());
   boost::numeric::ublas::lu_factorize(A, pm);
   boost::numeric::ublas::lu_substitute(A, pm, y);
-  return y;
+
+  std::vector<int> result;
+  for (int i = 0; i < y.size(); i++) {
+    result.push_back(y[i]);
+  }
+  return result;
 }

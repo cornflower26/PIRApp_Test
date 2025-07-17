@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.28.0)
 project(PIRApp VERSION 1.0)
 set(CLOUD_EXEC_NAME pir_cloud)
 set(AGENT_EXEC_NAME pir_agent)
+set(KEYCLOUD_EXEC_NAME keyword_pir_cloud)
+set(KEYAGENT_EXEC_NAME keyword_pir_agent)
 set(AGENT_SINGLE_EXEC_NAME pir_agent_single)
 set(BENCHMARK_EXEC_NAME pir_benchmark)
 set(LIBRARY_NAME pir_app_lib)
@@ -73,6 +75,12 @@ target_link_libraries(${AGENT_SINGLE_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 add_executable(${BENCHMARK_EXEC_NAME} src/cmd/benchmark.cxx)
 target_link_libraries(${BENCHMARK_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
 
+add_executable(${KEYAGENT_EXEC_NAME} src/cmd/key_agent.cxx)
+target_link_libraries(${KEYAGENT_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
+
+add_executable(${KEYCLOUD_EXEC_NAME} src/cmd/key_cloud.cxx)
+target_link_libraries(${KEYCLOUD_EXEC_NAME} PRIVATE ${LIBRARY_NAME})
+
 
 # properties
 set_target_properties(
@@ -81,6 +89,8 @@ set_target_properties(
   ${AGENT_EXEC_NAME}
   ${AGENT_SINGLE_EXEC_NAME}
   ${BENCHMARK_EXEC_NAME}
+  ${KEYCLOUD_EXEC_NAME}
+  ${KEYAGENT_EXEC_NAME}
     PROPERTIES
       CXX_STANDARD 20
       CXX_STANDARD_REQUIRED YES
