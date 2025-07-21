@@ -47,7 +47,6 @@ public:
                          const SecByteBlock &DH_other_public_value);
 
   SecByteBlock AES_generate_key(const SecByteBlock &DH_shared_key);
-  SecByteBlock SipHash_generate_key();
   std::pair<std::string, SecByteBlock> AES_encrypt(SecByteBlock key,
                                                    std::string plaintext);
   std::string AES_decrypt(SecByteBlock key, SecByteBlock iv,

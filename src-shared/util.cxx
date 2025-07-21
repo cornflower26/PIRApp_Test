@@ -1,5 +1,7 @@
 #include "../include-shared/util.hpp"
 
+#include <crypto++/osrng.h>
+
 /**
  * Convert char vec to string.
  */
@@ -219,7 +221,9 @@ int rep(CryptoPP::SecByteBlock hashkey, std::string key, int value) {
   full_rep[mac.DigestSize()] = val;
 
   CryptoPP::Integer hashval = CryptoPP::Integer(full_rep, sizeof(digest));
-  return hashval.ConvertToLong();
+  unsigned int final = hashval.ConvertToLong();
+  final = final%1024;
+  return final;
 }
 
 
@@ -233,26 +237,44 @@ std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, in
 
 std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d) {
   boost::numeric::ublas::matrix<int> M (partition.size(),d);
-  std::vector<int> reps;
+  boost::numeric::ublas::vector<int> y (d);
   for (int i = 0; i < partition.size(); i++) {
-    std::vector<int> rvector = RandVector(hash_key_2, partition[i].first,d);
+    //std::vector<int> rvector = RandVector(hash_key_2, partition[i].first,d);
+    std::vector<int> rvector(d,0);
+    rvector[i] = 1;
+    std::cout << "[ ";
+    for (int j = 0; j < rvector.size(); j++) std::cout << rvector[j] << " ";
+    std::cout << "]" << std::endl;
     for (int j = 0; j < d; j++) {
       M(i,j) = rvector[j];
     }
-    reps.push_back(rep(hash_key_2, partition[i].first,partition[i].second));
+    int reep = rep(hash_key_2, partition[i].first,partition[i].second);
+    std::cout << "Rep " << reep << std::endl;
+    y[i] = reep;
   }
-  return LinearSolve(M, reps);
+
+  return LinearSolve(M, y);
 }
 
-std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, std::vector<int> sol) {
-  boost::numeric::ublas::vector<int> y;
+std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, boost::numeric::ublas::vector<int> y) {
   boost::numeric::ublas::permutation_matrix<int> pm(A.size1());
   boost::numeric::ublas::lu_factorize(A, pm);
   boost::numeric::ublas::lu_substitute(A, pm, y);
 
   std::vector<int> result;
+  std::cout << std::endl << "[ ";
   for (int i = 0; i < y.size(); i++) {
+    std::cout << y[i] << " ";
     result.push_back(y[i]);
   }
+  std::cout << "]" << std::endl;
   return result;
+}
+
+
+CryptoPP::SecByteBlock SipHash_generate_key() {
+  CryptoPP::AutoSeededRandomPool prng;
+  CryptoPP::SecByteBlock key(CryptoPP::AES::DEFAULT_KEYLENGTH);
+  prng.GenerateBlock(key, key.size());
+  return key;
 }

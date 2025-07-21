@@ -67,4 +67,5 @@ seal::RelinKeys chvec_to_relinkeys(seal::SEALContext ctx,
 std::vector<int> read_csv_values(const std::string &filename);
 std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d);
 std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d);
-std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, std::vector<int> sol);
+std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, boost::numeric::ublas::vector<int> y);
+CryptoPP::SecByteBlock SipHash_generate_key();

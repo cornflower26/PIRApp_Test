@@ -29,6 +29,10 @@ void KeyCloudClient::DatabaseSetup() {
         std::string key = "value - " + std::to_string(i);
         database.insert(std::make_pair( key,1)) ;
     }
+
+    hash_key_1 = SipHash_generate_key();
+    hash_key_2 = SipHash_generate_key();
+    hash_key_r = SipHash_generate_key();
 }
 
 void KeyCloudClient::Encode() {
@@ -47,7 +51,7 @@ void KeyCloudClient::Encode() {
         partitions.push_back(std::make_pair(iterator->first, iterator->second));
         iterator++;
     }
-    for (int i = 0; i < b; i++) {
+    for (int i = 0; i < 1; i++) {
         std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b);
         for (int j = 0; j < e.size(); j++) {
             //std::vector<int> coords{i,j};
@@ -121,10 +125,6 @@ KeyCloudClient::HandleKeyExchange(std::shared_ptr<NetworkDriver> network_driver,
     auto AES_key = crypto_driver->AES_generate_key(dh_shared_key);
     auto HMAC_key = crypto_driver->HMAC_generate_key(dh_shared_key);
     auto keys = std::make_pair(AES_key, HMAC_key);
-
-    hash_key_1 = crypto_driver->SipHash_generate_key();
-    hash_key_2 = crypto_driver->SipHash_generate_key();
-    hash_key_r = crypto_driver->SipHash_generate_key();
 
     DHPublicValue_Message hashKey_1;
     hashKey_1.public_value = hash_key_1;
