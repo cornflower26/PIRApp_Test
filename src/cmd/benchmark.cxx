@@ -19,7 +19,7 @@ double averageRetrievalTime(int d, int s, int iter, int idx) {
     long long totalNanoseconds = 0;
     int result = 0;  // This variable stores the addition result
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
     // Run the addition iter times
     for (int i = 0; i < iter; ++i) {
         auto start = clock::now();
@@ -31,7 +31,7 @@ double averageRetrievalTime(int d, int s, int iter, int idx) {
         //std::cout << duration << " ";
         totalNanoseconds += duration;
     }
-    std::cout << totalNanoseconds << std::endl;
+    //std::cout << totalNanoseconds << std::endl;
 
     // Compute and return the average time per addition in nanoseconds.
     return static_cast<double>(totalNanoseconds) / double(iter);
@@ -57,12 +57,12 @@ int main(int argc, char *argv[]) {
     int index = std::stoi(argv[4]);
     **/
 
-    int iters = 100;
+    int iters = 10;
     int index = 0;
 
-    for (int d = 1; d < 4; d++) {
-        for (int s = 1; s < 11; s++) {
-            std::cout << "Timing for side length " << s << " and dimension "<< d << averageRetrievalTime(d, s, iters, index) << std::endl;
+    for (int d = 1; d < 3; d++) {
+        for (int s = 1; s < 100; s++) {
+            std::cout << "Timing for side length " << s << " and dimension "<< d << " " << averageRetrievalTime(d, s, iters, index) << std::endl;
         }
     }
     return 0;
