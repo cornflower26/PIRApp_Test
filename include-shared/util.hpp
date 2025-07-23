@@ -12,6 +12,8 @@
 #include "boost/numeric/ublas/matrix.hpp"
 #include "boost/numeric/ublas/matrix_expression.hpp"
 #include "boost/numeric/ublas/lu.hpp"
+#include "boost/qvm/mat.hpp"
+#include "boost/qvm/mat_operations.hpp"
 
 #include <crypto++/cryptlib.h>
 #include <crypto++/filters.h>
@@ -66,6 +68,11 @@ seal::RelinKeys chvec_to_relinkeys(seal::SEALContext ctx,
 //Other
 std::vector<int> read_csv_values(const std::string &filename);
 std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d);
-std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d);
-std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, boost::numeric::ublas::vector<int> y);
+std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d, int w);
+std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d, int w);
 CryptoPP::SecByteBlock SipHash_generate_key();
+
+//Matrix operations
+int determinant_sign(const boost::numeric::ublas::permutation_matrix<double>& pm);
+double Determinant( boost::numeric::ublas::matrix<double>& m );
+std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::numeric::ublas::vector<double> y);

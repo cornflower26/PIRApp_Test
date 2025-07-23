@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
     std::string command = "get ";
     command += argv[5];
-    // Create client object and run
+    // Create client object and perform a single get
     AgentClient agent = AgentClient(address, port, d, s);
     agent.HandleRetrieve(command);
     //agent.run();

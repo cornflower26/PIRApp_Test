@@ -185,6 +185,14 @@ std::vector<int> read_csv_values(const std::string &filename) {
   return values;
 }
 
+/**
+ * Given the hashkey, the key from the key,value pairing, and b (the number of partitions)
+ * this hash function will return which partition the key,value pairing should be placed in
+ * @param hashkey
+ * @param key
+ * @param b
+ * @return
+ */
 int partition_hash(CryptoPP::SecByteBlock hashkey, std::string key, int b) {
   CryptoPP::SipHash<4, 8, true> mac(hashkey.data(), hashkey.size());
   CryptoPP::byte digest[mac.DigestSize()];
@@ -196,6 +204,13 @@ int partition_hash(CryptoPP::SecByteBlock hashkey, std::string key, int b) {
   return result;
 }
 
+/**
+ * Given the hashkey and the key from the key,value pairing, return a boolean
+ * value. This is the hash function then used in the RandVector algorithm
+ * @param hashkey
+ * @param key
+ * @return
+ */
 bool hash_two(CryptoPP::SecByteBlock hashkey, std::string key) {
   CryptoPP::SipHash<4, 8, true> mac(hashkey.data(), hashkey.size());
   CryptoPP::byte digest[mac.DigestSize()];
@@ -207,6 +222,13 @@ bool hash_two(CryptoPP::SecByteBlock hashkey, std::string key) {
   return result;
 }
 
+/**
+ * Given the hashkey, the key and values from the pairing, returns the rep
+ * @param hashkey
+ * @param key
+ * @param value
+ * @return
+ */
 int rep(CryptoPP::SecByteBlock hashkey, std::string key, int value) {
   CryptoPP::SipHash<4, 8, true> mac(hashkey.data(), hashkey.size());
   CryptoPP::byte digest[mac.DigestSize()];
@@ -226,7 +248,10 @@ int rep(CryptoPP::SecByteBlock hashkey, std::string key, int value) {
   return final;
 }
 
-
+/**
+ * RandVector function according to Algorithm 3 of the SparsePIR paper
+ **/
+//Original RandVector which doesn't return a correct matrix with high enough probability
 std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d) {
   std::vector<int> result(d,0);
   for (int i = 0; i < d; i++) {
@@ -235,19 +260,59 @@ std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, in
   return result;
 }
 
-std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d) {
-  boost::numeric::ublas::matrix<int> M (partition.size(),d);
-  boost::numeric::ublas::vector<int> y (d);
-  for (int i = 0; i < partition.size(); i++) {
-    //std::vector<int> rvector = RandVector(hash_key_2, partition[i].first,d);
-    std::vector<int> rvector(d,0);
-    rvector[i] = 1;
-    std::cout << "[ ";
-    for (int j = 0; j < rvector.size(); j++) std::cout << rvector[j] << " ";
-    std::cout << "]" << std::endl;
-    for (int j = 0; j < d; j++) {
-      M(i,j) = rvector[j];
+/**
+ * RandVector function as described in Algorithm 8
+ * of the SparsePIR paper
+ * @param hash_key
+ * @param key
+ * @param d
+ * @param w
+ * @return
+ */
+std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d, int w) {
+  std::vector<int> result(d,0);
+  int position = partition_hash(hash_key, key, d-w);
+  for (int i = 0; i < w; i++) {
+    if (i + position < d) result[i + position] = hash_two(hash_key, key + std::to_string(i));
+  }
+  return result;
+}
+
+/**
+ * GenerateEncode algorithm according to Algorithm 4
+ * in the SparsePIR paper
+ * @param hash_key_1
+ * @param hash_key_2
+ * @param partition
+ * @param d
+ * @param w (band size for band matrix)
+ * @return
+ */
+std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d, int w) {
+  boost::numeric::ublas::matrix<double> M (partition.size(),d);
+  boost::numeric::ublas::vector<double> y (d);
+  double determinant = 0;
+
+  int tries = 0;
+  while (determinant != 1 && determinant != -1){
+    hash_key_1 = SipHash_generate_key();
+    std::cout << "Matrix: " << std::endl;
+    for (int i = 0; i < partition.size(); i++) {
+      std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
+      //std::vector<int> rvector(d,0);
+      //rvector[i] = 1;
+      std::cout << "[ ";
+      for (int j = 0; j < rvector.size(); j++) std::cout << rvector[j] << " ";
+      std::cout << "]" << std::endl;
+      for (int j = 0; j < d; j++) {
+        M(i,j) = rvector[j];
+      }
     }
+    determinant = Determinant(M);
+    tries++;
+  }
+  std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+  for (int i = 0; i < partition.size(); i++) {
     int reep = rep(hash_key_2, partition[i].first,partition[i].second);
     std::cout << "Rep " << reep << std::endl;
     y[i] = reep;
@@ -256,8 +321,15 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock hash_key_1, CryptoPP::Sec
   return LinearSolve(M, y);
 }
 
-std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, boost::numeric::ublas::vector<int> y) {
-  boost::numeric::ublas::permutation_matrix<int> pm(A.size1());
+
+/**
+ * Does a linear solve of Matrix A and solution vector Y
+ * @param A
+ * @param y
+ * @return
+ */
+std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::numeric::ublas::vector<double> y) {
+  boost::numeric::ublas::permutation_matrix<double> pm(A.size1());
   boost::numeric::ublas::lu_factorize(A, pm);
   boost::numeric::ublas::lu_substitute(A, pm, y);
 
@@ -265,16 +337,43 @@ std::vector<int> LinearSolve(boost::numeric::ublas::matrix<int> A, boost::numeri
   std::cout << std::endl << "[ ";
   for (int i = 0; i < y.size(); i++) {
     std::cout << y[i] << " ";
-    result.push_back(y[i]);
+    //result.push_back(int(y[i]));
+    result.push_back(5);
   }
   std::cout << "]" << std::endl;
   return result;
 }
 
-
+/**
+ * generates a hashkey for the SipHash hash function
+ * @return
+ */
 CryptoPP::SecByteBlock SipHash_generate_key() {
   CryptoPP::AutoSeededRandomPool prng;
   CryptoPP::SecByteBlock key(CryptoPP::AES::DEFAULT_KEYLENGTH);
   prng.GenerateBlock(key, key.size());
   return key;
 }
+
+int determinant_sign(const boost::numeric::ublas::permutation_matrix<double>& pm) {
+  int pm_sign=1;
+  std::size_t size = pm.size();
+  for (std::size_t i = 0; i < size; ++i)
+    if (i != pm(i))
+      pm_sign *= -1.0; // swap_rows would swap a pair of rows here, so we change sign
+  return pm_sign;
+}
+
+double Determinant( boost::numeric::ublas::matrix<double>& m ) {
+  boost::numeric::ublas::permutation_matrix<double> pm(m.size1());
+  double det = 1.0;
+  if( boost::numeric::ublas::lu_factorize(m,pm) ) {
+    det = 0.0;
+  } else {
+    for(int i = 0; i < m.size1(); i++)
+      det *= m(i,i); // multiply by elements on diagonal
+    det = det * determinant_sign( pm );
+  }
+  return det;
+}
+

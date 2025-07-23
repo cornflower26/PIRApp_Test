@@ -16,19 +16,40 @@ namespace {
     src::severity_logger<logging::trivial::severity_level> lg;
 }
 
+/**
+ * Constructor
+ */
 KeyAgentClient::KeyAgentClient(std::string address, int port, int d, int s, int epsilon) : AgentClient(address, port, d, s) {
     b = ((1 + epsilon)*pow(sidelength,dimension))/d;
     this->epsilon = epsilon;
     this->n = pow(sidelength,dimension);
+    this->w = sidelength/3;
+    DatabaseSetup();
 }
 
+
+/**
+ * Like DoRetrieve, but this one retrieves based off of a string key
+ * @param network_driver
+ * @param crypto_driver
+ * @param key
+ * @return
+ */
 CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> network_driver,
-                         std::shared_ptr<CryptoDriver> crypto_driver,
-                         std::string key) {
+                                                std::shared_ptr<CryptoDriver> crypto_driver,
+                                                std::string key) {
+    // Initialize drivers.
+    network_driver->connect(this->address, this->port);
+
+    // Key exchange with server. From here on out, any outgoing messages should
+    // be encrypted and MAC tagged. Incoming messages should be decrypted and have
+    // their MAC checked.
+    auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
+    //std::cout << "Connected and handled key exchange" << std::endl;
     std::vector<std::vector<int>> to_encode(dimension);
-    //to_encode[0] = RandVector(hash_key_2,key, sidelength);
-    to_encode[0] = std::vector<int>(sidelength);
-    to_encode[0][5] = 1;
+    to_encode[0] = RandVector(hash_key_2,key, sidelength);
+    //to_encode[0] = std::vector<int>(sidelength);
+    //to_encode[0][5] = 1;
     /**
     int j = partition_hash(hash_key_1,key,b);
     for (int i = 1; i < dimension;i++){
@@ -39,46 +60,13 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
         j = j % b;
         }
         **/
-    return Retrieve(network_driver,crypto_driver,to_encode);
+
+    return Retrieve(network_driver,crypto_driver,to_encode,keys);
 }
 
-/**
- * run
- */
-void KeyAgentClient::run() {
-    REPLDriver<KeyAgentClient> repl = REPLDriver<KeyAgentClient>(this);
-    repl.add_action("get", "get <key>", &AgentClient::HandleRetrieve);
-    repl.add_action("keyword", "keyword <key>", &KeyAgentClient::HandleKeyRetrieve);
-    repl.run();
-}
-
-
-/**
- * Privately retrieve a value from the cloud.
- */
-void KeyAgentClient::HandleKeyRetrieve(std::string input) {
-    // Parse input.
-    std::vector<std::string> input_split = string_split(input, ' ');
-    if (input_split.size() != 2) {
-        this->cli_driver->print_left("invalid number of arguments.");
-        return;
-    }
-    std::string key = input_split[1];
-
-    // Call retrieve
-    std::shared_ptr<NetworkDriver> network_driver =
-        std::make_shared<NetworkDriverImpl>();
-    std::shared_ptr<CryptoDriver> crypto_driver =
-        std::make_shared<CryptoDriver>();
-    this->DoKeyRetrieve(network_driver, crypto_driver, key);
-}
-
-/**
- * Come to a shared secret
- */
 std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
-KeyAgentClient::HandleKeyExchange(std::shared_ptr<CryptoDriver> crypto_driver,
-                               std::shared_ptr<NetworkDriver> network_driver) {
+    KeyAgentClient::HandleKeyExchange(std::shared_ptr<CryptoDriver> crypto_driver,
+                    std::shared_ptr<NetworkDriver> network_driver){
     // Generate private/public DH keys
     auto dh_values = crypto_driver->DH_initialize();
 
@@ -118,5 +106,61 @@ KeyAgentClient::HandleKeyExchange(std::shared_ptr<CryptoDriver> crypto_driver,
     DHPublicValue_Message hash_key_r_message;
     hash_key_r_message.deserialize(hash_key_r_m);
     hash_key_r = hash_key_r_message.public_value;
+
     return keys;
+}
+
+
+/**
+ * run
+ */
+void KeyAgentClient::run() {
+    REPLDriver<KeyAgentClient> repl = REPLDriver<KeyAgentClient>(this);
+    repl.add_action("get", "get <key>", &AgentClient::HandleRetrieve);
+    repl.add_action("keyword", "keyword <key>", &KeyAgentClient::HandleKeyRetrieve);
+    repl.add_action("keys", "keys", &KeyAgentClient::DatabasePrint);
+    repl.run();
+}
+
+/**
+ * Prints all of the keys in the database in case you need them
+ * @param input
+ */
+void KeyAgentClient::DatabasePrint(std::string input) {
+    std::cout << "Database keys: ";
+    for (int i = 0; i < keys.size(); i++) {
+        std::cout << keys[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
+
+/**
+ * Privately retrieve a value from the cloud given a key.
+ */
+void KeyAgentClient::HandleKeyRetrieve(std::string input) {
+    // Parse input.
+    std::vector<std::string> input_split = string_split(input, ' ');
+    if (input_split.size() != 2) {
+        this->cli_driver->print_left("invalid number of arguments.");
+        return;
+    }
+    std::string key = input_split[1];
+
+    // Call retrieve
+    std::shared_ptr<NetworkDriver> network_driver =
+        std::make_shared<NetworkDriverImpl>();
+    std::shared_ptr<CryptoDriver> crypto_driver =
+        std::make_shared<CryptoDriver>();
+    this->DoKeyRetrieve(network_driver, crypto_driver, key);
+}
+
+/**
+ * Generates a list of the keys
+ */
+void KeyAgentClient::DatabaseSetup() {
+    for (int i = 0; i < n; i++) {
+        std::string key = "value-" + std::to_string(i);
+        keys.push_back(key) ;
+    }
 }

@@ -44,22 +44,10 @@ int main(int argc, char *argv[]) {
     // Initialize logger
     initLogger();
 
-    /**
-    // Parse args
-    if (argc != 5) {
-        std::cout << "Usage: ./pir_agent <address> <port> <dimension> <sidelength>"
-                  << std::endl;
-        return 1;
-    }
-    int d = std::stoi(argv[1]);
-    int s = std::stoi(argv[2]);
-    int iters = std::stoi(argv[3]);
-    int index = std::stoi(argv[4]);
-    **/
-
     int iters = 100;
     int index = 0;
 
+    //Does benchmarking for dimensions 1-3 and sidelengths 1-11
     for (int d = 1; d < 4; d++) {
         for (int s = 1; s < 11; s++) {
             std::cout << "Timing for side length " << s << " and dimension "<< d << averageRetrievalTime(d, s, iters, index) << std::endl;

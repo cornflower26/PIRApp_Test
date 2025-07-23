@@ -17,16 +17,25 @@ namespace {
 }
 using namespace seal;
 
+/**
+ * Constructor
+ */
 KeyCloudClient::KeyCloudClient(int d, int s, int epsilon) : CloudClient(d, s) {
     //b = ((1 + epsilon)*pow(sidelength,dimension))/d;
     b = sidelength;
     this->epsilon = epsilon;
     this->n = pow(sidelength,dimension);
+    this->w = sidelength/3;
 }
 
+/**
+ * Generates the database including all key, value pairings
+ * The keys are "value-index" and the values are all 1
+ * Also generates the hash keys for preprocessing
+ */
 void KeyCloudClient::DatabaseSetup() {
     for (int i = 0; i < n; i++) {
-        std::string key = "value - " + std::to_string(i);
+        std::string key = "value-" + std::to_string(i);
         database.insert(std::make_pair( key,1)) ;
     }
 
@@ -35,10 +44,14 @@ void KeyCloudClient::DatabaseSetup() {
     hash_key_r = SipHash_generate_key();
 }
 
+/**
+ * Database Preprocessing for KeywordPIR
+ * Generates the E database
+ */
 void KeyCloudClient::Encode() {
     int side = sidelength;
     //if (b > sidelength) side = b;
-    this->hypercube_driver = std::make_shared<HypercubeDriver>(1, side, CryptoPP::Integer(PLAINTEXT_MODULUS));
+    //this->hypercube_driver = std::make_shared<HypercubeDriver>(1, side, CryptoPP::Integer(PLAINTEXT_MODULUS));
     int m = (1 + epsilon)*n;
 
     //std::vector<std::vector<std::pair<std::string, int>>> partitions(b-1);
@@ -52,7 +65,7 @@ void KeyCloudClient::Encode() {
         iterator++;
     }
     for (int i = 0; i < 1; i++) {
-        std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b);
+        std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b,w);
         for (int j = 0; j < e.size(); j++) {
             //std::vector<int> coords{i,j};
             //this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);
@@ -63,6 +76,8 @@ void KeyCloudClient::Encode() {
 
 /**
  * run
+ * adds the keyword command that replacs the original
+ * database with preprocessed database
  */
 void KeyCloudClient::run(int port) {
     // Start listener thread
@@ -96,7 +111,7 @@ void KeyCloudClient::HandleKeyword(std::string input) {
 }
 
 /**
- * Come to a shared secret
+ * Come to a shared secret, sends hash_keys
  */
 std::pair<CryptoPP::SecByteBlock, CryptoPP::SecByteBlock>
 KeyCloudClient::HandleKeyExchange(std::shared_ptr<NetworkDriver> network_driver,

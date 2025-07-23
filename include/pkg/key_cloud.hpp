@@ -19,6 +19,7 @@ private:
     int b;
     int epsilon;
     int n;
+    int w;
     std::map<std::string, int> database;
 
     CryptoPP::SecByteBlock hash_key_1;
