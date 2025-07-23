@@ -279,6 +279,22 @@ std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, in
 }
 
 /**
+ * Modified to only choose one index per thing for brute force too hard reasons
+ * @param hash_key
+ * @param key
+ * @param d
+ * @param w
+ * @return
+ */
+std::vector<int> RandIndexVector(CryptoPP::SecByteBlock hash_key, std::string key, int d) {
+  std::vector<int> result(d,0);
+  int position = partition_hash(hash_key, key, d);
+  result[position] = 1;
+  return result;
+}
+
+
+/**
  * GenerateEncode algorithm according to Algorithm 4
  * in the SparsePIR paper
  * @param hash_key_1
@@ -290,17 +306,17 @@ std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, in
  */
 std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d, int w) {
   boost::numeric::ublas::matrix<double> M (partition.size(),d);
-  boost::numeric::ublas::vector<double> y (d);
+  boost::numeric::ublas::vector<double> y (d,0);
   double determinant = 0;
 
   int tries = 0;
-  while (determinant != 1 && determinant != -1){
+  //while (determinant != 1 && determinant != -1){
+  while (determinant == 0){
     hash_key_1 = SipHash_generate_key();
     std::cout << "Matrix: " << std::endl;
     for (int i = 0; i < partition.size(); i++) {
-      std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
-      //std::vector<int> rvector(d,0);
-      //rvector[i] = 1;
+      //std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
+      std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);
       std::cout << "[ ";
       for (int j = 0; j < rvector.size(); j++) std::cout << rvector[j] << " ";
       std::cout << "]" << std::endl;
@@ -337,8 +353,7 @@ std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::num
   std::cout << std::endl << "[ ";
   for (int i = 0; i < y.size(); i++) {
     std::cout << y[i] << " ";
-    //result.push_back(int(y[i]));
-    result.push_back(5);
+    result.push_back(int(y[i]));
   }
   std::cout << "]" << std::endl;
   return result;

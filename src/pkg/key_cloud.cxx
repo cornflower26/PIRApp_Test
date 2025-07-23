@@ -70,6 +70,7 @@ void KeyCloudClient::Encode() {
             //std::vector<int> coords{i,j};
             //this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);
             this->hypercube_driver->insert(j,e[j]);
+            //std::cout << "Insert " << e[j] << " at " << j << std::endl;
         }
     }
 }
