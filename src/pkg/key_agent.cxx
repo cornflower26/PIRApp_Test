@@ -160,7 +160,7 @@ void KeyAgentClient::HandleKeyRetrieve(std::string input) {
  */
 void KeyAgentClient::DatabaseSetup() {
     for (int i = 0; i < n; i++) {
-        std::string key = "value-" + std::to_string(i);
+        std::string key = "value-" + std::to_string(i+1);
         keys.push_back(key) ;
     }
 }

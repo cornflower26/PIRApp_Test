@@ -35,8 +35,8 @@ KeyCloudClient::KeyCloudClient(int d, int s, int epsilon) : CloudClient(d, s) {
  */
 void KeyCloudClient::DatabaseSetup() {
     for (int i = 0; i < n; i++) {
-        std::string key = "value-" + std::to_string(i);
-        database.insert(std::make_pair( key,1)) ;
+        std::string key = "value-" + std::to_string(i+1);
+        database.insert(std::make_pair( key,i+1)) ;
     }
 
     hash_key_1 = SipHash_generate_key();

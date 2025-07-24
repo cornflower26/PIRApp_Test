@@ -75,5 +75,8 @@ CryptoPP::SecByteBlock SipHash_generate_key();
 
 //Matrix operations
 int determinant_sign(const boost::numeric::ublas::permutation_matrix<double>& pm);
-double Determinant( boost::numeric::ublas::matrix<double>& m );
+double Determinant( boost::numeric::ublas::matrix<double> m );
 std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::numeric::ublas::vector<double> y);
+std::vector<int> ModifiedLinearSolve(boost::numeric::ublas::matrix<double> A, boost::numeric::ublas::vector<double> y);
+void MatrixPrint(boost::numeric::ublas::matrix<double> A);
+void VectorPrint(boost::numeric::ublas::vector<double> y);

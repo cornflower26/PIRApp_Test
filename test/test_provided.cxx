@@ -13,6 +13,140 @@
 
 TEST_CASE("sample") { CHECK(true); }
 
+/**
+TEST_CASE("Identity Matrix prod vector") {
+    boost::numeric::ublas::matrix<double> M (2,2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (i == j) M(i,j) = 1;
+            else M(i,j) = 0;
+        }
+    }
+    MatrixPrint(M);
+    boost::numeric::ublas::vector<double> y (2,0);
+    y[0] = 1;
+    VectorPrint(y);
+    VectorPrint(boost::numeric::ublas::prod(M,y));
+    CHECK(true);
+}
+
+TEST_CASE("Small Matrix prod vector") {
+    boost::numeric::ublas::matrix<double> M (2,2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (i != j) M(i,j) = 1;
+            else M(i,j) = 0;
+        }
+    }
+    MatrixPrint(M);
+    boost::numeric::ublas::vector<double> y (2,0);
+    y[0] = 1;
+    VectorPrint(y);
+    VectorPrint(boost::numeric::ublas::prod(M,y));
+    CHECK(true);
+}
+
+TEST_CASE("Identity Matrix solve") {
+    boost::numeric::ublas::matrix<double> M (2,2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (i == j) M(i,j) = 1;
+            else M(i,j) = 0;
+        }
+    }
+    MatrixPrint(M);
+    boost::numeric::ublas::vector<double> y (2,1);
+    VectorPrint(y);
+    VectorPrint(boost::numeric::ublas::solve(M,y, boost::numeric::ublas::lower_tag()));
+    CHECK(true);
+}
+
+TEST_CASE("Small Matrix solve") {
+    boost::numeric::ublas::matrix<double> M (2,2);
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            if (i == j) M(i,j) = 2;
+            else M(i,j) = 1;
+        }
+    }
+    boost::numeric::ublas::lu_factorize(M);
+    MatrixPrint(M);
+    boost::numeric::ublas::vector<double> y (2,1);
+    VectorPrint(y);
+    VectorPrint(boost::numeric::ublas::solve(M,y, boost::numeric::ublas::lower_tag()));
+    CHECK(true);
+}
+
+TEST_CASE("Medium Matrix prod vector") {
+    boost::numeric::ublas::matrix<double> M (9,9);
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            M(i,j) = (i+j)%2;
+        }
+    }
+    MatrixPrint(M);
+    boost::numeric::ublas::vector<double> y (9,1);
+    VectorPrint(y);
+    VectorPrint(boost::numeric::ublas::prod(M,y));
+    CHECK(true);
+}
+
+TEST_CASE("Medium Matrix solve") {
+    boost::numeric::ublas::matrix<double> M (9,9);
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (i == j) M(i,j) = 1;
+            else M(i,j) = 0;
+        }
+    }
+    MatrixPrint(M);
+    boost::numeric::ublas::vector<double> y (9,1);
+    VectorPrint(y);
+    boost::numeric::ublas::lu_factorize(M);
+    VectorPrint(boost::numeric::ublas::solve(M,y, boost::numeric::ublas::lower_tag()));
+    CHECK(true);
+}**/
+
+TEST_CASE("The big one"){
+    boost::numeric::ublas::matrix<double> M (9,9);
+    boost::numeric::ublas::vector<double> y (9,0);
+    double determinant = 0;
+
+    int tries = 0;
+    while (determinant == 0){
+        CryptoPP::SecByteBlock hash_key_1 = SipHash_generate_key();
+        std::cout << "Matrix: " << std::endl;
+        for (int i = 0; i < M.size1(); i++) {
+            std::vector<int> rvector = RandIndexVector(hash_key_1, "value-" +std::to_string(i),9);
+            std::cout << "[ ";
+            for (int j = 0; j < rvector.size(); j++) {
+                M(i,j) = rvector[j];
+                std::cout << M(i,j) << " ";
+            }
+            std::cout << "]" << std::endl;
+        }
+        determinant = Determinant(M);
+        tries++;
+    }
+    std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+    MatrixPrint(M);
+    //std::cout << "[ ";
+    for (int i = 0; i < y.size(); i++) {
+        y[i] = i;
+        //std::cout << y[i] << "," << "value-"+std::to_string(i) << " ";
+    }
+    //std::cout << "]" << std::endl;
+    VectorPrint(y);
+
+    std::vector<int> solve = LinearSolve(M,y);
+    std::cout << "Final [ ";
+    for (int i =0;i<solve.size();i++) {
+        std::cout << solve[i] << " ";
+    }
+    std::cout << "]" << std::endl;
+    CHECK(true);
+}
+/**
 TEST_CASE("createAgent") {
     // Create client object and run
     AgentClient agent = AgentClient("localhost",8080,2,3);
@@ -82,5 +216,5 @@ TEST_CASE("getBenchmark8") {
     int result = client.get(8);
     CHECK(result == 1);
 }
-
+**/
 

@@ -314,25 +314,29 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::Se
   while (determinant == 0){
     hash_key_1 = SipHash_generate_key();
     std::cout << "Matrix: " << std::endl;
-    for (int i = 0; i < partition.size(); i++) {
+    for (int i = 0; i < M.size1(); i++) {
       //std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
       std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);
       std::cout << "[ ";
-      for (int j = 0; j < rvector.size(); j++) std::cout << rvector[j] << " ";
-      std::cout << "]" << std::endl;
-      for (int j = 0; j < d; j++) {
+      for (int j = 0; j < rvector.size(); j++) {
         M(i,j) = rvector[j];
+        std::cout << M(i,j) << " ";
       }
+      std::cout << "]" << std::endl;
     }
     determinant = Determinant(M);
     tries++;
   }
   std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
-  for (int i = 0; i < partition.size(); i++) {
-    int reep = rep(hash_key_2, partition[i].first,partition[i].second);
-    std::cout << "Rep " << reep << std::endl;
-    y[i] = reep;
+  std::cout << "[ ";
+  for (int i = 0; i < y.size(); i++) {
+    //int reep = rep(hash_key_2, partition[i].first,partition[i].second);
+    //y[i] = reep;
+    y[i] = partition[i].second;
+    std::cout << y[i] << "," << partition[i].first << " ";
+    //M(d,i) = y[i];
   }
+  std::cout << "]" << std::endl;
 
   return LinearSolve(M, y);
 }
@@ -360,6 +364,33 @@ std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::num
 }
 
 /**
+ * Does not perform linear solve of Matrix A and solution vector Y
+ * @param A
+ * @param y
+ * @return
+ */
+std::vector<int> ModifiedLinearSolve(boost::numeric::ublas::matrix<double> A, boost::numeric::ublas::vector<double> y) {
+  std::cout << "[ ";
+  for (int i = 0; i < y.size(); i++) std::cout << y[i] << " ";
+  std::cout << "]" << std::endl;
+  //boost::numeric::ublas::permutation_matrix<double> pm(A.size1());
+  boost::numeric::ublas::lu_factorize(A);
+  //boost::numeric::ublas::inplace_solve(pm, A,boost::numeric::ublas::lower_tag ());
+  //boost::numeric::ublas::lu_substitute(A, pm, y);
+  boost::numeric::ublas::vector<double> x = boost::numeric::ublas::solve(A,y, boost::numeric::ublas::lower_tag ());
+  //boost::numeric::ublas::vector<double> x = boost::numeric::ublas::prod(A,y);
+
+  std::vector<int> result;
+  std::cout << "[ ";
+  for (int i = 0; i < x.size(); i++) {
+    std::cout << x[i] << " ";
+    result.push_back(int(x[i]));
+  }
+  std::cout << "]" << std::endl;
+  return result;
+}
+
+/**
  * generates a hashkey for the SipHash hash function
  * @return
  */
@@ -379,7 +410,7 @@ int determinant_sign(const boost::numeric::ublas::permutation_matrix<double>& pm
   return pm_sign;
 }
 
-double Determinant( boost::numeric::ublas::matrix<double>& m ) {
+double Determinant( boost::numeric::ublas::matrix<double> m ) {
   boost::numeric::ublas::permutation_matrix<double> pm(m.size1());
   double det = 1.0;
   if( boost::numeric::ublas::lu_factorize(m,pm) ) {
@@ -392,3 +423,23 @@ double Determinant( boost::numeric::ublas::matrix<double>& m ) {
   return det;
 }
 
+
+void MatrixPrint(boost::numeric::ublas::matrix<double> A) {
+  std::cout << " MATRIX: " << std::endl;
+  for (int i = 0; i < A.size1(); i++) {
+    std::cout << "[ ";
+    for (int j = 0; j < A.size2(); j++) {
+      std::cout << A(i,j) << " ";
+    }
+    std::cout << "]" << std::endl;
+  }
+}
+
+void VectorPrint(boost::numeric::ublas::vector<double> y) {
+  std::cout << " VECTOR: " << std::endl;
+  std::cout << "[ ";
+  for (int i = 0; i < y.size(); i++) {
+    std::cout << y[i] << " ";
+  }
+  std::cout << "]" << std::endl;
+}
