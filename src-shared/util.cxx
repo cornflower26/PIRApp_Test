@@ -313,30 +313,30 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::Se
   //while (determinant != 1 && determinant != -1){
   while (determinant == 0){
     hash_key_1 = SipHash_generate_key();
-    std::cout << "Matrix: " << std::endl;
+    //std::cout << "Matrix: " << std::endl;
     for (int i = 0; i < M.size1(); i++) {
       //std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
       std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);
-      std::cout << "[ ";
+      //std::cout << "[ ";
       for (int j = 0; j < rvector.size(); j++) {
         M(i,j) = rvector[j];
-        std::cout << M(i,j) << " ";
+        //std::cout << M(i,j) << " ";
       }
-      std::cout << "]" << std::endl;
+      //std::cout << "]" << std::endl;
     }
     determinant = Determinant(M);
     tries++;
   }
-  std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
-  std::cout << "[ ";
+  //std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+  //std::cout << "[ ";
   for (int i = 0; i < y.size(); i++) {
     //int reep = rep(hash_key_2, partition[i].first,partition[i].second);
     //y[i] = reep;
     y[i] = partition[i].second;
-    std::cout << y[i] << "," << partition[i].first << " ";
+    //std::cout << y[i] << "," << partition[i].first << " ";
     //M(d,i) = y[i];
   }
-  std::cout << "]" << std::endl;
+  //std::cout << "]" << std::endl;
 
   return LinearSolve(M, y);
 }
@@ -354,12 +354,12 @@ std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::num
   boost::numeric::ublas::lu_substitute(A, pm, y);
 
   std::vector<int> result;
-  std::cout << std::endl << "[ ";
+  //std::cout << std::endl << "[ ";
   for (int i = 0; i < y.size(); i++) {
-    std::cout << y[i] << " ";
+    //std::cout << y[i] << " ";
     result.push_back(int(y[i]));
   }
-  std::cout << "]" << std::endl;
+  //std::cout << "]" << std::endl;
   return result;
 }
 
