@@ -2,7 +2,7 @@
 
 In order to get this project working after checking it out of the library, several steps need to be taken:
 
-- change the value of SIGSTKSZ to a real value in the doctest.cpp file
+- change the value of SIGSTKSZ to a real value in the doctest.cpp file (maybe 16385)
 - do an explicit include of the repl_driver.cxx in both the pkg\cloud.cxx and pkg\agent.cxx
 - install the libcrypto++ library
 - change the byte namespace to CryptoPP if necessary

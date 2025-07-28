@@ -23,6 +23,13 @@
 #include <crypto++/sha.h>
 #include <crypto++/siphash.h>
 
+#include <NTL/matrix.h>
+#include <NTL/vec_vec_ZZ_p.h>
+#include <NTL/ZZ.h>
+#include <NTL/ZZ_p.h>
+#include <NTL/mat_ZZ_p.h>
+#include <NTL/vec_ZZ_p.h>
+
 // String <=> Vec<char>.
 std::string chvec2str(std::vector<unsigned char> data);
 std::vector<unsigned char> str2chvec(std::string s);
@@ -71,6 +78,7 @@ std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, in
 std::vector<int> RandVector(CryptoPP::SecByteBlock hash_key, std::string key, int d, int w);
 std::vector<int> RandIndexVector(CryptoPP::SecByteBlock hash_key, std::string key, int d);
 std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d, int w);
+std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d);
 CryptoPP::SecByteBlock SipHash_generate_key();
 
 //Matrix operations

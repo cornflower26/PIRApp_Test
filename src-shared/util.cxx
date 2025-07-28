@@ -341,6 +341,46 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::Se
   return LinearSolve(M, y);
 }
 
+std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d) {
+  NTL::ZZ_p::init(NTL::ZZ(199));
+  NTL::mat_ZZ_p M;
+  M.SetDims(partition.size(),d);
+  NTL::vec_ZZ_p y;
+  y.SetLength(d);
+  NTL::ZZ_p determinant( 0);
+
+  int tries = 0;
+  while (determinant == 0){
+    hash_key_1 = SipHash_generate_key();
+    for (int i = 0; i < M.NumCols(); i++) {
+      //std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
+      std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);
+      for (int j = 0; j < rvector.size(); j++) {
+        M(i,j) = NTL::to_ZZ_p(long(rvector[j]));
+      }
+    }
+    determinant = NTL::determinant(M);
+    tries++;
+  }
+  std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+
+  for (int i = 0; i < y.length(); i++) {
+    y[i] = NTL::to_ZZ_p(partition[i].second);
+  }
+  NTL::vec_ZZ_p sol;
+  NTL::solve(determinant,y, M, sol);
+
+  std::vector<int> x(d);
+  std::cout << "Solution: [";
+  for (long i = 0; i < d; ++i) {
+    NTL::ZZ temp = NTL::rep(y[i]);
+    x[i] = to_int(temp);
+    std::cout << x[i] << " ";
+  }
+  std::cout << "]" << std::endl;
+  return x;
+}
+
 
 /**
  * Does a linear solve of Matrix A and solution vector Y

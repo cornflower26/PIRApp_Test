@@ -41,6 +41,7 @@ target_link_libraries(${LIBRARY_NAME_SHARED} PRIVATE sqlite3)
 target_link_libraries(${LIBRARY_NAME_SHARED} PRIVATE SEAL::seal)
 target_link_libraries(${LIBRARY_NAME_SHARED} PRIVATE ${Boost_LIBRARIES})
 target_link_libraries(${LIBRARY_NAME_SHARED} PRIVATE ${CURSES_LIBRARIES})
+target_link_libraries(${LIBRARY_NAME_SHARED} PRIVATE ntl)
 
 # add student libraries
 set(SOURCES

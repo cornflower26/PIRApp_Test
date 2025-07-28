@@ -108,6 +108,51 @@ TEST_CASE("Medium Matrix solve") {
 }**/
 
 TEST_CASE("The big one"){
+    NTL::ZZ_p::init(NTL::ZZ(199));
+    NTL::mat_ZZ_p M;
+    M.SetDims(9,9);
+    NTL::vec_ZZ_p y;
+    y.SetLength(9);
+    NTL::ZZ_p determinant( 0);
+
+    determinant = NTL::to_ZZ_p(5);
+    M(0,0) = determinant;
+
+    int tries = 0;
+    while (determinant == 0){
+        CryptoPP::SecByteBlock hash_key_1 = SipHash_generate_key();
+        for (int i = 0; i < M.NumCols(); i++) {
+            //std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
+            std::vector<int> rvector = RandIndexVector(hash_key_1, "value-" +std::to_string(i),9);
+            for (int j = 0; j < rvector.size(); j++) {
+                M(i,j) = NTL::to_ZZ_p(long(rvector[j]));
+            }
+        }
+        determinant = NTL::determinant(M);
+        tries++;
+    }
+    std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+
+    for (int i = 0; i < y.length(); i++) {
+        y[i] = NTL::to_ZZ_p(i);
+    }
+    NTL::vec_ZZ_p sol;
+    NTL::solve(determinant,y, M, sol);
+
+    std::vector<int> x(9);
+    std::cout << "Solution: [";
+    for (long i = 0; i < 9; ++i) {
+        NTL::ZZ temp = NTL::rep(y[i]);
+        x[i] = to_int(temp);
+        std::cout << x[i] << " ";
+    }
+    std::cout << "]" << std::endl;
+    CHECK(true);
+}
+
+
+/**
+TEST_CASE("The big one"){
     boost::numeric::ublas::matrix<double> M (9,9);
     boost::numeric::ublas::vector<double> y (9,0);
     double determinant = 0;
@@ -146,7 +191,7 @@ TEST_CASE("The big one"){
     std::cout << "]" << std::endl;
     CHECK(true);
 }
-/**
+
 TEST_CASE("createAgent") {
     // Create client object and run
     AgentClient agent = AgentClient("localhost",8080,2,3);
