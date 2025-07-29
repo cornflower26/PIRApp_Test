@@ -1,4 +1,5 @@
 #include "../include-shared/util.hpp"
+#include "../include-shared/constants.hpp"
 
 #include <crypto++/osrng.h>
 
@@ -342,7 +343,7 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::Se
 }
 
 std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d) {
-  NTL::ZZ_p::init(NTL::ZZ(199));
+  NTL::ZZ_p::init(NTL::ZZ(KEYWORD_MODULUS));
   NTL::mat_ZZ_p M;
   M.SetDims(partition.size(),d);
   NTL::vec_ZZ_p y;
@@ -362,8 +363,8 @@ std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP
     determinant = NTL::determinant(M);
     tries++;
   }
-  std::cout << M << std::endl;
-  std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+  //std::cout << M << std::endl;
+  //std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
 
   for (int i = 0; i < y.length(); i++) {
     y[i] = NTL::to_ZZ_p(partition[i].second);

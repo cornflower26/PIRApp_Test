@@ -33,3 +33,4 @@ const CryptoPP::Integer DL_Q = CryptoPP::Integer(
 
 const int POLY_MODULUS_DEGREE = 4096;
 const int PLAINTEXT_MODULUS = 1024;
+const int KEYWORD_MODULUS = 257;

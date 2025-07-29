@@ -202,8 +202,10 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
     for (int j = 0; j < pow(sidelength,dimension); j++) {
       std::vector<int> coords = hypercube_driver->to_coords(j);
       if (i == 0) {
-        //std::cout << "Multiplying " << std::to_string(hypercube_driver->get(j).ConvertToLong()) << " times index " << coords[i] << std::endl;
-        seal::Plaintext plaintext(std::to_string(hypercube_driver->get(j).ConvertToLong()));
+        uint64_t temp = static_cast<uint64_t>(hypercube_driver->get(j).ConvertToLong());
+        //std::cout << "Multiplying " << std::to_string(hypercube_driver->get(j).ConvertToLong()) << " in hex " << seal::util::uint_to_hex_string(&temp, std::size_t(1)) << std::endl;
+        seal::Plaintext plaintext(seal::util::uint_to_hex_string(&temp, std::size_t(1)));
+        if (temp == 0) plaintext = seal::Plaintext(std::to_string(0));
         seal::Ciphertext result;
         evaluator.multiply_plain(query[coords[i]],plaintext,result);
         newCube.push_back(result);
