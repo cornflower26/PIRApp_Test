@@ -48,9 +48,9 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
     //std::cout << "Connected and handled key exchange" << std::endl;
     std::vector<std::vector<int>> to_encode(dimension);
     //to_encode[0] = RandIndexVector(hash_key_2,key, sidelength);
-    to_encode[0] = RandVector(hash_key_2,key, sidelength);
-    //to_encode[0] = std::vector<int>(sidelength);
-    //to_encode[0][5] = 1;
+    //to_encode[0] = RandVector(hash_key_2,key, sidelength);
+    to_encode[0] = std::vector<int>(sidelength);
+    to_encode[0][1] = 1;
     /**
     int j = partition_hash(hash_key_1,key,b);
     for (int i = 1; i < dimension;i++){

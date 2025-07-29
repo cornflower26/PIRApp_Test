@@ -200,13 +200,14 @@ AgentClient::Retrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Encryptor encryptor(context, publicKey);
   seal::Decryptor decryptor(context, secretKey);
+  seal::IntegerEncoder encoder(context);
   //std::cout << "Generated parameters, context, and keys" << std::endl;
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
   std::cout << "Indices [";
   for (int i = 0; i < query.size();i++) {
     for (int j = 0; j < query[i].size(); j++) {
-      seal::Plaintext plain(std::to_string(query[i][j]));
+      seal::Plaintext plain = encoder.encode(std::to_string(query[i][j]));
       encryptor.encrypt(plain,ciphertexts[j]);
       std::cout << " " << query[i][j] << ", ";
     }
@@ -230,8 +231,8 @@ AgentClient::Retrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Plaintext plaintext;
   decryptor.decrypt(response,plaintext);
-  //std::cout << "Decoded the response " << plaintext.to_string() << std::endl;
+  std::cout << "Decoded the response " << plaintext.to_string() << std::endl;
   std::cout << "Decoded the response " << plaintext[0] << std::endl;
-  //std::cout << "Decoded the response " << (plaintext[0]/2)%199 << std::endl;
+  std::cout << "Decoded the response " << encoder.decode_int32(plaintext) << std::endl;
   return byteblock_to_integer(string_to_byteblock(plaintext.to_string()));
 }
