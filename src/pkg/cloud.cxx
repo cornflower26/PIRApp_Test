@@ -202,6 +202,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
     for (int j = 0; j < pow(sidelength,dimension); j++) {
       std::vector<int> coords = hypercube_driver->to_coords(j);
       if (i == 0) {
+        //std::cout << "Multiplying " << std::to_string(hypercube_driver->get(j).ConvertToLong()) << " times index " << coords[i] << std::endl;
         seal::Plaintext plaintext(std::to_string(hypercube_driver->get(j).ConvertToLong()));
         seal::Ciphertext result;
         evaluator.multiply_plain(query[coords[i]],plaintext,result);
@@ -217,8 +218,14 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Ciphertext query_result;
   for (int i = 0; i < pow(sidelength,dimension); i++) {
-    if (i==0) query_result = newCube[i];
-    else evaluator.add_inplace(query_result,newCube[i]);
+    if (i==0) {
+      query_result = newCube[i];
+      //std::cout << "Creating new cube" <<std::endl;
+    }
+    else {
+      evaluator.add_inplace(query_result,newCube[i]);
+      //std::cout << "Inplace add" <<std::endl;
+    }
   }
 
   ServerToUser_Response_Message *message = new ServerToUser_Response_Message();

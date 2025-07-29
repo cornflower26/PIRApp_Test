@@ -65,8 +65,8 @@ void KeyCloudClient::Encode() {
         iterator++;
     }
     for (int i = 0; i < 1; i++) {
-        std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b,w);
-        //std::vector<int> e = GenerateModPEncode(hash_key_2,hash_key_r,partitions,b);
+        //std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b,w);
+        std::vector<int> e = GenerateModPEncode(hash_key_2,hash_key_r,partitions,b);
         for (int j = 0; j < e.size(); j++) {
             //std::vector<int> coords{i,j};
             //this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);

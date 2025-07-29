@@ -353,31 +353,31 @@ std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP
   while (determinant == 0){
     hash_key_1 = SipHash_generate_key();
     for (int i = 0; i < M.NumCols(); i++) {
-      //std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
-      std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);
+      std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
+      //std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);
       for (int j = 0; j < rvector.size(); j++) {
-        M(i,j) = NTL::to_ZZ_p(long(rvector[j]));
+        M[i][j] = NTL::to_ZZ_p(long(rvector[j]));
       }
     }
     determinant = NTL::determinant(M);
     tries++;
   }
+  std::cout << M << std::endl;
   std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
 
   for (int i = 0; i < y.length(); i++) {
     y[i] = NTL::to_ZZ_p(partition[i].second);
   }
   NTL::vec_ZZ_p sol;
-  NTL::solve(determinant,y, M, sol);
+  sol.SetLength(y.length());
+  NTL::solve(determinant,M,sol,y);
 
   std::vector<int> x(d);
-  std::cout << "Solution: [";
   for (long i = 0; i < d; ++i) {
-    NTL::ZZ temp = NTL::rep(y[i]);
+    NTL::ZZ temp = NTL::rep(sol[i]);
     x[i] = to_int(temp);
-    std::cout << x[i] << " ";
   }
-  std::cout << "]" << std::endl;
+  std::cout << sol << std::endl;
   return x;
 }
 
