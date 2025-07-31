@@ -342,6 +342,9 @@ std::vector<int> GenerateEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::Se
   return LinearSolve(M, y);
 }
 
+/**
+* Does Generate Encoding for a matrix mod P
+*/
 std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP::SecByteBlock hash_key_2, std::vector<std::pair<std::string, int>> partition, int d) {
   NTL::ZZ_p::init(NTL::ZZ(KEYWORD_MODULUS));
   NTL::mat_ZZ_p M;
