@@ -206,10 +206,12 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
       if (i == 0) {
         uint64_t temp = static_cast<uint64_t>(hypercube_driver->get(j).ConvertToLong());
         std::cout << "Multiplying " << std::to_string(hypercube_driver->get(j).ConvertToLong()) << " in hex " << seal::util::uint_to_hex_string(&temp, std::size_t(1)) << std::endl;
-        seal::Plaintext plaintext(seal::util::uint_to_hex_string(&temp, std::size_t(1)));
-        seal::Ciphertext result;
-        evaluator.multiply_plain(query[coords[i]],plaintext,result);
-        newCube.push_back(result);
+        if (temp != 0){
+          seal::Plaintext plaintext(seal::util::uint_to_hex_string(&temp, std::size_t(1)));
+          seal::Ciphertext result;
+          evaluator.multiply_plain(query[coords[i]],plaintext,result);
+          newCube.push_back(result);
+        }
       }
       else {
         evaluator.multiply_inplace(newCube[j],query[sidelength*i+coords[i]]);
@@ -220,7 +222,7 @@ void CloudClient::HandleSend(std::shared_ptr<NetworkDriver> network_driver,
   }
 
   seal::Ciphertext query_result;
-  for (int i = 0; i < pow(sidelength,dimension); i++) {
+  for (int i = 0; i < newCube.size(); i++) {
     if (i==0) {
       query_result = newCube[i];
       std::cout << "Creating new cube" <<std::endl;
