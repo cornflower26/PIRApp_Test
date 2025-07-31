@@ -45,7 +45,9 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
     // be encrypted and MAC tagged. Incoming messages should be decrypted and have
     // their MAC checked.
     auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
-    //std::cout << "Connected and handled key exchange" << std::endl;
+    std::cout << "Connected and handled key exchange" << std::endl;
+    std::cout << "AES_key " << byteblock_to_string(keys.first) << std::endl;
+    std::cout << "HMAC_key " << byteblock_to_string(keys.second) << std::endl;
     std::vector<std::vector<int>> to_encode(dimension);
     //to_encode[0] = RandIndexVector(hash_key_2,key, sidelength);
     to_encode[0] = RandVector(hash_key_2,key, sidelength);

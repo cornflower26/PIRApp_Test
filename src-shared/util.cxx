@@ -366,8 +366,8 @@ std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP
     determinant = NTL::determinant(M);
     tries++;
   }
-  //std::cout << M << std::endl;
-  //std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
+  std::cout << M << std::endl;
+  std::cout << "Final number of tries: " << tries << ", and the final determinant: " << determinant << std::endl;
 
   for (int i = 0; i < y.length(); i++) {
     y[i] = NTL::to_ZZ_p(partition[i].second);

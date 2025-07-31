@@ -200,19 +200,30 @@ AgentClient::Retrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   seal::Encryptor encryptor(context, publicKey);
   seal::Decryptor decryptor(context, secretKey);
-  //std::cout << "Generated parameters, context, and keys" << std::endl;
+  std::cout << "Generated parameters, context, and keys" << std::endl;
+  std::cout << "\t Polynomial Modulus Degree: " << POLY_MODULUS_DEGREE << std::endl;
+  std::cout << "\t Plaintext Modulus Degree: " << PLAINTEXT_MODULUS << std::endl;
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
-  //std::cout << "Indices [";
+  std::cout << "Indices [";
   for (int i = 0; i < query.size();i++) {
     for (int j = 0; j < query[i].size(); j++) {
       seal::Plaintext plain = std::to_string(query[i][j]);
       encryptor.encrypt(plain,ciphertexts[j]);
-      //std::cout << " " << query[i][j] << ", ";
+      std::cout << " " << query[i][j] << ", ";
     }
   }
-  //std::cout << "]" << std::endl;
-  //std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
+  std::cout << "]" << std::endl;
+
+  std::cout << "Ciphertexts: " << std::endl;
+  std::cout << "\t Size: " <<  ciphertexts[0].dyn_array().size() << std::endl;
+  for (int i = 0; i < ciphertexts.size();i++) {
+    auto data = ciphertexts[i].data();
+    std::cout << "\t Ciphertext " << i << " : [ " << data[0] << " ... " <<
+                    data[ciphertexts[i].dyn_array().size()-1] << " ]" << std::endl;
+    //std::cout << chvec2str(ciphertexts[i]) << ", ";
+  }
+  std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
 
   UserToServer_Query_Message *message = new UserToServer_Query_Message();
   message->rks = relinKeys;
@@ -220,7 +231,7 @@ AgentClient::Retrieve(std::shared_ptr<NetworkDriver> network_driver,
 
   std::vector<unsigned char> final_query = crypto_driver->encrypt_and_tag(keys.first,keys.second,message);
   network_driver->send(final_query);
-  //std::cout << "Sent the selection vector to the server" << std::endl;
+  std::cout << "Sent the selection vector to the server" << std::endl;
 
   std::vector<unsigned char> query_response = network_driver->read();
   std::pair<std::vector<unsigned char>, bool> unwrapped_response = crypto_driver->decrypt_and_verify(keys.first,keys.second,query_response);
