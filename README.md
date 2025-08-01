@@ -7,4 +7,9 @@ In order to get this project working after checking it out of the library, sever
 - install the libcrypto++ library
 - change the byte namespace to CryptoPP if necessary
 
+PIR_Cloud CLI = 8080 1 9
+PIR_Agent CLI = localhost 8080 1 9
+
+d \leq 3, s \leq 11
+
 Make sure you're using a linux or Mac so that you can use the curses or ncurses library, as the pdcurses is not sufficient on Windows. 
