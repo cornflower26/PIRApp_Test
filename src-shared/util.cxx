@@ -496,3 +496,20 @@ void VectorPrint(std::vector<int> y) {
   }
   std::cout << "]" << std::endl;
 }
+
+std::vector<int> to_coords(int idx, int s, int d) {
+  if (idx > std::pow(s,d)-1)
+    throw std::runtime_error("Hypercube out of bounds");
+
+  std::vector<int> res;
+  res.resize(d);
+  for (int e = d - 1; e >= 0; e--) {
+    res[d - e - 1] = 0;
+    int step = std::pow(s, e);
+    while (idx >= step) {
+      idx -= step;
+      res[d - e - 1] += 1;
+    }
+  }
+  return res;
+}

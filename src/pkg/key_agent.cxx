@@ -47,16 +47,14 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
     // their MAC checked.
     auto keys = this->HandleKeyExchange(crypto_driver, network_driver);
     //std::cout << "Connected and handled key exchange" << std::endl;
-    std::vector<std::vector<int>> to_encode(dimension);
-    //to_encode[0] = RandIndexVector(hash_key_2,key, sidelength);
-    to_encode[0] = RandVector(hash_key_2,key, sidelength);
-    //to_encode[0] = std::vector<int>(sidelength);
-    //to_encode[0][1] = 1;
+    std::vector<std::vector<int>> to_encode;
 
-    int j = partition_hash(hash_key_1,key,b);
+    /**
+    int temp_b = b;
+    int j = partition_hash(hash_key_1,key,temp_b);
     std::cout << " Partition value " << j << std::endl;
     for (int i = 1; i < dimension;i++){
-        int j_i =  j/((b/sidelength)+1);
+        int j_i =  j/((temp_b/sidelength)+1);
         std::cout << "J_i value " << j_i << std::endl;
         std::vector<int> v_i(sidelength,0);
         v_i[j_i] = 1;
@@ -65,12 +63,29 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
             std::cout << v_i[p] << " ";
         }
         std::cout << "]" << std::endl;
-        b = (b/sidelength)+1;
-        std::cout << "B value " << b << std::endl;
-        j = j % b;
+        temp_b = (temp_b/sidelength)+1;
+        std::cout << "B value " << temp_b << std::endl;
+        j = j % temp_b;
         std::cout << "New j value " << j << std::endl;
         to_encode.push_back(v_i);
+
     }
+    **/
+    int part = partition_hash(hash_key_1,key,b);
+    std::vector<int> coordinates = to_coords(part, sidelength, dimension-1);
+    //VectorPrint(coordinates);
+    //std::cout << "Partition " << part << std::endl;
+    std::vector<int> indices((this->dimension-1)*this->sidelength,0);
+    //std::cout << "Indices [";
+    for (int i = 0; i < indices.size();i++) {
+        if (i%this->sidelength == coordinates[i/this->sidelength]) {
+            indices[i] = 1;
+        }
+        //std::cout << " " << indices[i] << ", ";
+    }
+    //std::cout << "]" << std::endl;
+    to_encode.push_back(indices);
+    to_encode.push_back(RandVector(hash_key_2,key, sidelength));
 
 
     return Retrieve(network_driver,crypto_driver,to_encode,keys);

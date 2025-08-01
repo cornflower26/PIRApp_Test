@@ -137,16 +137,16 @@ AgentClient::DoRetrieve(std::shared_ptr<NetworkDriver> network_driver,
   std::vector<int> indices(this->dimension*this->sidelength,0);
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
-  std::cout << "Indices [";
+  //std::cout << "Indices [";
   for (int i = 0; i < indices.size();i++) {
     if (i%this->sidelength == coordinates[i/this->sidelength]) {
       indices[i] = 1;
     }
-    std::cout << " " << indices[i] << ", ";
+    //std::cout << " " << indices[i] << ", ";
     seal::Plaintext plain(std::to_string(indices[i]));
     encryptor.encrypt(plain,ciphertexts[i]);
   }
-  std::cout << "]" << std::endl;
+  //std::cout << "]" << std::endl;
   //std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
 
   UserToServer_Query_Message *message = new UserToServer_Query_Message();
@@ -203,17 +203,17 @@ AgentClient::Retrieve(std::shared_ptr<NetworkDriver> network_driver,
   //std::cout << "Generated parameters, context, and keys" << std::endl;
 
   std::vector<seal::Ciphertext> ciphertexts(this->dimension*this->sidelength,Ciphertext());
-  std::cout << "Indices [";
+  //std::cout << "Indices [";
   int idx = 0;
   for (int i = 0; i < query.size();i++) {
     for (int j = 0; j < query[i].size(); j++) {
       seal::Plaintext plain = std::to_string(query[i][j]);
       encryptor.encrypt(plain,ciphertexts[idx]);
       idx++;
-      std::cout << " " << query[i][j] << ", ";
+      //std::cout << " " << query[i][j] << ", ";
     }
   }
-  std::cout << "]" << std::endl;
+  //std::cout << "]" << std::endl;
   //std::cout << "Generated a selection vector based on the key's coordinates" << std::endl;
 
   UserToServer_Query_Message *message = new UserToServer_Query_Message();

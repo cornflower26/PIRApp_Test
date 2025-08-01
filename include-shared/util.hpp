@@ -89,3 +89,6 @@ std::vector<int> ModifiedLinearSolve(boost::numeric::ublas::matrix<double> A, bo
 void MatrixPrint(boost::numeric::ublas::matrix<double> A);
 void VectorPrint(boost::numeric::ublas::vector<double> y);
 void VectorPrint(std::vector<int> y);
+
+//Hypercube operation
+std::vector<int> to_coords(int idx, int s, int d);
