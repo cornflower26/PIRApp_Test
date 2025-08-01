@@ -200,7 +200,7 @@ int partition_hash(CryptoPP::SecByteBlock hashkey, std::string key, int b) {
   mac.CalculateDigest(digest,(const CryptoPP::byte*)&key[0], key.size());
 
   CryptoPP::Integer hashval = CryptoPP::Integer(digest, sizeof(digest));
-  uint64_t range = static_cast<uint64_t>(b) - static_cast<uint64_t>(0) + 1;
+  uint64_t range = static_cast<uint64_t>(b) - static_cast<uint64_t>(0);
   int result = static_cast<int>(hashval % range);
   return result;
 }
@@ -355,7 +355,7 @@ std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP
 
   int tries = 0;
   while (determinant == 0){
-    hash_key_1 = SipHash_generate_key();
+    if (tries != 0) hash_key_1 = SipHash_generate_key();
     for (int i = 0; i < M.NumCols(); i++) {
       std::vector<int> rvector = RandVector(hash_key_1, partition[i].first,d);
       //std::vector<int> rvector = RandIndexVector(hash_key_1, partition[i].first,d);

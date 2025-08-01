@@ -21,8 +21,8 @@ using namespace seal;
  * Constructor
  */
 KeyCloudClient::KeyCloudClient(int d, int s, int epsilon) : CloudClient(d, s) {
-    //b = ((1 + epsilon)*pow(sidelength,dimension))/d;
-    b = sidelength;
+    b = ((1 + epsilon)*pow(sidelength,dimension))/sidelength;
+    //should be ((1 + epsilon)*pow(sidelength,dimension))/d;
     this->epsilon = epsilon;
     this->n = pow(sidelength,dimension);
     this->w = sidelength/3;
@@ -54,24 +54,41 @@ void KeyCloudClient::Encode() {
     //this->hypercube_driver = std::make_shared<HypercubeDriver>(1, side, CryptoPP::Integer(PLAINTEXT_MODULUS));
     int m = (1 + epsilon)*n;
 
-    //std::vector<std::vector<std::pair<std::string, int>>> partitions(b-1);
-    std::vector<std::pair<std::string, int>> partitions;
-    auto iterator = database.begin();
-    for (int i = 0; i < n; i++) {
-        std::string key = iterator->first;
-        int part = partition_hash(hash_key_1,key,b);
-        //partitions[part].push_back(std::make_pair(iterator->first, iterator->second));
-        partitions.push_back(std::make_pair(iterator->first, iterator->second));
-        iterator++;
+    std::vector<std::vector<std::pair<std::string, int>>> partitions(b);
+    int redo = 0;
+    while (redo == 0) {
+        redo = 1;
+        //std::vector<std::pair<std::string, int>> partitions;
+        hash_key_1 = SipHash_generate_key();
+        auto iterator = database.begin();
+        for (int i = 0; i < n; i++) {
+            std::string key = iterator->first;
+            int part = partition_hash(hash_key_1,key,b);
+            //partitions[part].push_back(std::make_pair(iterator->first, iterator->second));
+            partitions[part].push_back(std::make_pair(iterator->first, iterator->second));
+            iterator++;
+            if (partitions[part].size() > sidelength) {
+                partitions.clear();
+                partitions.resize(b);
+                redo = 0;
+                break;
+            }
+        }
     }
-    for (int i = 0; i < 1; i++) {
-        //std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b,w);
-        std::vector<int> e = GenerateModPEncode(hash_key_2,hash_key_r,partitions,b);
-        for (int j = 0; j < e.size(); j++) {
-            //std::vector<int> coords{i,j};
-            //this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);
-            this->hypercube_driver->insert(j,e[j]);
-            //std::cout << "Insert " << e[j] << " at " << j << std::endl;
+    CryptoPP::SecByteBlock hash;
+    while (hash != hash_key_2){
+        int idx = 0;
+        for (int i = 0; i < sidelength; i++) {
+            //std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b,w);
+            if (i == 0) hash = hash_key_2;
+            std::vector<int> e = GenerateModPEncode(hash_key_2,hash_key_r,partitions[i],sidelength);
+            for (int j = 0; j < e.size(); j++) {
+                //std::vector<int> coords{i,j};
+                //this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);
+                this->hypercube_driver->insert(idx,e[j]);
+                idx++;
+                //std::cout << "Insert " << e[j] << " at " << j << std::endl;
+            }
         }
     }
 }

@@ -20,7 +20,8 @@ namespace {
  * Constructor
  */
 KeyAgentClient::KeyAgentClient(std::string address, int port, int d, int s, int epsilon) : AgentClient(address, port, d, s) {
-    b = ((1 + epsilon)*pow(sidelength,dimension))/d;
+    b = ((1 + epsilon)*pow(sidelength,dimension))/sidelength;
+    //should be ((1 + epsilon)*pow(sidelength,dimension))/d;
     this->epsilon = epsilon;
     this->n = pow(sidelength,dimension);
     this->w = sidelength/3;
@@ -51,16 +52,26 @@ CryptoPP::Integer KeyAgentClient::DoKeyRetrieve(std::shared_ptr<NetworkDriver> n
     to_encode[0] = RandVector(hash_key_2,key, sidelength);
     //to_encode[0] = std::vector<int>(sidelength);
     //to_encode[0][1] = 1;
-    /**
+
     int j = partition_hash(hash_key_1,key,b);
+    std::cout << " Partition value " << j << std::endl;
     for (int i = 1; i < dimension;i++){
-       int j_i =  j/((b/sidelength)+1);
-        std::vector<int> v_i(dimension,0);
-        v_i[j_i + 1] = 1;
-        b = (b/sidelength)+1;
-        j = j % b;
+        int j_i =  j/((b/sidelength)+1);
+        std::cout << "J_i value " << j_i << std::endl;
+        std::vector<int> v_i(sidelength,0);
+        v_i[j_i] = 1;
+        std::cout << "[ ";
+        for (int p = 0; p < v_i.size(); p++) {
+            std::cout << v_i[p] << " ";
         }
-        **/
+        std::cout << "]" << std::endl;
+        b = (b/sidelength)+1;
+        std::cout << "B value " << b << std::endl;
+        j = j % b;
+        std::cout << "New j value " << j << std::endl;
+        to_encode.push_back(v_i);
+    }
+
 
     return Retrieve(network_driver,crypto_driver,to_encode,keys);
 }
