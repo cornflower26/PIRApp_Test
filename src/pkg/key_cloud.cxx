@@ -64,6 +64,7 @@ void KeyCloudClient::Encode() {
         for (int i = 0; i < n; i++) {
             std::string key = iterator->first;
             int part = partition_hash(hash_key_1,key,b);
+            //std::cout << "Partition " << part << std::endl;
             //partitions[part].push_back(std::make_pair(iterator->first, iterator->second));
             partitions[part].push_back(std::make_pair(iterator->first, iterator->second));
             iterator++;
@@ -78,19 +79,28 @@ void KeyCloudClient::Encode() {
     CryptoPP::SecByteBlock hash;
     while (hash != hash_key_2){
         int idx = 0;
-        for (int i = 0; i < sidelength; i++) {
+        for (int i = 0; i < b; i++) {
             //std::vector<int> e = GenerateEncode(hash_key_2,hash_key_r,partitions,b,w);
             if (i == 0) hash = hash_key_2;
             std::vector<int> e = GenerateModPEncode(hash_key_2,hash_key_r,partitions[i],sidelength);
             for (int j = 0; j < e.size(); j++) {
-                //std::vector<int> coords{i,j};
+                //std::vector<int> coords{i/sidelength,i%sidelength,j};
                 //this->hypercube_driver->insert(this->hypercube_driver->from_coords(coords),e[j]);
                 this->hypercube_driver->insert(idx,e[j]);
+                //std::cout << "Inserting at ";
+                //VectorPrint(this->hypercube_driver->to_coords(idx));
+                //std::cout << std::endl;
                 idx++;
                 //std::cout << "Insert " << e[j] << " at " << j << std::endl;
             }
+            if (hash != hash_key_2) break;
         }
     }
+    std::cout << "[ ";
+    for (int i = 0; i < n; i++) {
+        std::cout << this->hypercube_driver->get(i) << " ";
+    }
+    std::cout << "]" << std::endl;
 }
 
 /**

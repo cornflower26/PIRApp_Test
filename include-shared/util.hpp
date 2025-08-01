@@ -88,3 +88,4 @@ std::vector<int> LinearSolve(boost::numeric::ublas::matrix<double> A, boost::num
 std::vector<int> ModifiedLinearSolve(boost::numeric::ublas::matrix<double> A, boost::numeric::ublas::vector<double> y);
 void MatrixPrint(boost::numeric::ublas::matrix<double> A);
 void VectorPrint(boost::numeric::ublas::vector<double> y);
+void VectorPrint(std::vector<int> y);

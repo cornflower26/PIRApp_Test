@@ -381,7 +381,7 @@ std::vector<int> GenerateModPEncode(CryptoPP::SecByteBlock &hash_key_1, CryptoPP
     NTL::ZZ temp = NTL::rep(sol[i]);
     x[i] = to_int(temp);
   }
-  std::cout << sol << std::endl;
+  //std::cout << sol << std::endl;
   return x;
 }
 
@@ -480,6 +480,15 @@ void MatrixPrint(boost::numeric::ublas::matrix<double> A) {
 }
 
 void VectorPrint(boost::numeric::ublas::vector<double> y) {
+  std::cout << " VECTOR: " << std::endl;
+  std::cout << "[ ";
+  for (int i = 0; i < y.size(); i++) {
+    std::cout << y[i] << " ";
+  }
+  std::cout << "]" << std::endl;
+}
+
+void VectorPrint(std::vector<int> y) {
   std::cout << " VECTOR: " << std::endl;
   std::cout << "[ ";
   for (int i = 0; i < y.size(); i++) {
